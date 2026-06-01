@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>Настройки ТНЭ чат</title>
+  <link rel="stylesheet" href="options.css" />
+</head>
+<body>
+  <main class="page">
+    <section class="hero">
+      <div class="logo" aria-hidden="true"><img src="icons/icon128.png" alt="" /></div>
+      <div>
+        <h1>Настройки расширения</h1>
+        <p>ТНЭ чат · Браузер: вопросы по содержимому текущей страницы.</p>
+      </div>
+    </section>
+
+    <form id="settings-form" class="card">
+      <label>
+        <span>API endpoint</span>
+        <input name="endpoint" type="url" required />
+      </label>
+
+      <label>
+        <span>API token</span>
+        <input name="token" type="password" placeholder="Вставьте корпоративный токен" autocomplete="off" />
+      </label>
+
+      <div class="grid-2">
+        <label>
+          <span>Auth header</span>
+          <input name="authHeaderName" type="text" placeholder="Authorization или X-Proxy-Key" />
+        </label>
+        <label>
+          <span>Prefix</span>
+          <input name="authPrefix" type="text" placeholder="Bearer " />
+        </label>
+      </div>
+
+      <div class="grid-2">
+        <label>
+          <span>Model</span>
+          <input name="model" type="text" />
+        </label>
+        <label>
+          <span>Model ID</span>
+          <input name="modelId" type="number" min="1" />
+        </label>
+      </div>
+
+      <div class="grid-3">
+        <label>
+          <span>Temperature</span>
+          <input name="temperature" type="number" min="0" max="2" step="0.01" />
+        </label>
+        <label>
+          <span>Max output tokens</span>
+          <input name="maxOutputTokens" type="number" min="1" />
+        </label>
+        <label>
+          <span>Max context chars</span>
+          <input name="maxContextChars" type="number" min="1000" max="15000" />
+        </label>
+      </div>
+
+      <label>
+        <span>Timeout, ms</span>
+        <input name="requestTimeoutMs" type="number" min="1000" />
+      </label>
+
+      <button type="submit">Сохранить</button>
+      <div id="status" class="status"></div>
+    </form>
+
+    <section class="note">
+      <strong>Для промышленного варианта:</strong> токен лучше не хранить в расширении, а ходить через backend/proxy с корпоративной авторизацией.
+    </section>
+  </main>
+  <script src="options.js"></script>
+</body>
+</html>

@@ -1,0 +1,47 @@
+{
+  "manifest_version": 2,
+  "name": "ТНЭ чат · Браузер",
+  "description": "ТНЭ чат: анализ и вопросы по содержимому текущей страницы через корпоративную языковую модель.",
+  "version": "0.7.0-firefox",
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "browser_action": {
+    "default_title": "Спросить ТНЭ чат по странице",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "background": {
+    "scripts": [
+      "background.js"
+    ],
+    "persistent": false
+  },
+  "options_ui": {
+    "page": "options.html",
+    "open_in_tab": true
+  },
+  "permissions": [
+    "activeTab",
+    "storage",
+    "tabs",
+    "<all_urls>"
+  ],
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "tne-page-chat@tne.tn.corp",
+      "strict_min_version": "91.0"
+    }
+  },
+  "web_accessible_resources": [
+    "icons/icon128.png",
+    "icons/tne-browser-chat-logo.png"
+  ]
+}
