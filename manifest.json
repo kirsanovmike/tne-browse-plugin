@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "name": "ТНЭ чат · Браузер",
   "description": "ТНЭ чат: анализ и вопросы по содержимому текущей страницы через корпоративную языковую модель.",
-  "version": "0.7.0-firefox",
+  "version": "0.8.0-firefox",
   "icons": {
     "16": "icons/icon16.png",
     "32": "icons/icon32.png",
@@ -28,6 +28,20 @@
     "page": "options.html",
     "open_in_tab": true
   },
+  "commands": {
+    "_execute_browser_action": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+U"
+      },
+      "description": "Открыть или закрыть панель ТНЭ чат"
+    },
+    "tne-ask-selection": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+Y"
+      },
+      "description": "Спросить ТНЭ чат по выделенному фрагменту"
+    }
+  },
   "permissions": [
     "activeTab",
     "storage",
@@ -42,6 +56,8 @@
   },
   "web_accessible_resources": [
     "icons/icon128.png",
-    "icons/tne-browser-chat-logo.png"
+    "icons/tne-browser-chat-logo.png",
+    "panel.css",
+    "lib/highlight-theme.css"
   ]
 }

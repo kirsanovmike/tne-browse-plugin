@@ -1,0 +1,32 @@
+{
+  "name": "tne-browse-plugin",
+  "version": "0.9.0",
+  "description": "ТНЭ чат · Браузер — cross-browser extension build (Vite + TypeScript, MV3)",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "dev:chrome": "TARGET_BROWSER=chrome vite",
+    "build": "npm run build:firefox && npm run build:chrome",
+    "build:firefox": "TARGET_BROWSER=firefox vite build",
+    "build:chrome": "TARGET_BROWSER=chrome vite build",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "ci": "tsc --noEmit && vitest run && npm run build"
+  },
+  "devDependencies": {
+    "@types/webextension-polyfill": "^0.12.5",
+    "typescript": "^5.7.2",
+    "vite": "^6.0.0",
+    "vite-plugin-static-copy": "^2.2.0",
+    "vite-plugin-web-extension": "^4.4.3",
+    "vitest": "^4.1.8"
+  },
+  "dependencies": {
+    "@mozilla/readability": "^0.6.0",
+    "highlight.js": "^11.11.1",
+    "marked": "^18.0.4",
+    "webextension-polyfill": "^0.12.0"
+  }
+}

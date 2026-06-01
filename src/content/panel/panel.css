@@ -593,6 +593,344 @@
   to { transform: rotate(360deg); }
 }
 
+/* ─── Переключатели объёма контекста (scope) ─── */
+.tne-scope-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 9px;
+}
+
+.tne-scope-button {
+  flex: 1 1 auto;
+  padding: 5px 8px;
+  border: 1px solid rgba(106, 127, 154, 0.24);
+  border-radius: 10px;
+  background: rgba(15, 22, 41, 0.5);
+  color: rgba(221, 227, 238, 0.74);
+  cursor: pointer;
+  font-size: 10px;
+  line-height: 1.1;
+  white-space: nowrap;
+  transition: border-color 0.16s ease, background 0.16s ease, color 0.16s ease;
+}
+
+.tne-scope-button:hover {
+  border-color: rgba(13, 148, 136, 0.5);
+  color: var(--tne-text);
+}
+
+.tne-scope-button--active {
+  border-color: rgba(13, 148, 136, 0.7);
+  background: rgba(13, 148, 136, 0.18);
+  color: var(--tne-text);
+  font-weight: 700;
+}
+
+#tne-payload-details pre {
+  font-size: 11px;
+}
+
+/* ─── Предупреждение о чувствительных данных ─── */
+.tne-warning-bar {
+  flex: 0 0 auto;
+  margin: 0 14px 8px;
+  padding: 10px 12px;
+  background: rgba(212, 130, 42, 0.14);
+  border: 1px solid rgba(212, 130, 42, 0.5);
+  border-radius: 14px;
+  color: #fde4c7;
+}
+
+.tne-warning-bar[hidden] {
+  display: none;
+}
+
+.tne-warning-text {
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.tne-warning-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.tne-warning-actions button {
+  padding: 5px 10px;
+  border-radius: 9px;
+  border: 1px solid rgba(212, 130, 42, 0.5);
+  background: rgba(212, 130, 42, 0.16);
+  color: #fde4c7;
+  cursor: pointer;
+  font-size: 11px;
+}
+
+.tne-warning-actions button:hover {
+  background: rgba(212, 130, 42, 0.28);
+}
+
+#tne-warning-cancel {
+  border-color: rgba(106, 127, 154, 0.3);
+  background: rgba(30, 41, 59, 0.7);
+  color: var(--tne-muted-soft);
+}
+
+/* ─── Лоадер со «Стоп» ─── */
+.tne-loader-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.tne-stop-button {
+  padding: 4px 9px;
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  border-radius: 9px;
+  background: rgba(239, 68, 68, 0.12);
+  color: #fecaca;
+  cursor: pointer;
+  font-size: 10px;
+}
+
+.tne-stop-button:hover {
+  background: rgba(239, 68, 68, 0.22);
+}
+
+/* ─── Кнопка копирования кода ─── */
+.tne-code-pre {
+  position: relative;
+}
+
+.tne-code-copy {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  padding: 3px 8px;
+  border: 1px solid rgba(106, 127, 154, 0.3);
+  border-radius: 8px;
+  background: rgba(15, 22, 41, 0.85);
+  color: rgba(221, 227, 238, 0.78);
+  cursor: pointer;
+  font-size: 10px;
+  opacity: 0;
+  transition: opacity 0.16s ease;
+}
+
+.tne-code-pre:hover .tne-code-copy {
+  opacity: 1;
+}
+
+.tne-code-copy:hover {
+  border-color: rgba(13, 148, 136, 0.6);
+  color: var(--tne-text);
+}
+
+/* ─── Markdown в ответе ─── */
+.tne-message-content ul,
+.tne-message-content ol {
+  margin: 6px 0;
+  padding-left: 20px;
+}
+
+.tne-message-content li {
+  margin: 3px 0;
+}
+
+.tne-message-content p {
+  margin: 6px 0;
+}
+
+.tne-message-content a {
+  color: var(--tne-logo);
+  text-decoration: underline;
+}
+
+.tne-message-content blockquote {
+  margin: 8px 0;
+  padding: 4px 12px;
+  border-left: 3px solid var(--tne-border-strong);
+  color: var(--tne-muted-soft);
+}
+
+.tne-message-content table {
+  width: 100%;
+  margin: 8px 0;
+  border-collapse: collapse;
+  font-size: calc(var(--tne-content-font-size) - 1px);
+}
+
+.tne-message-content th,
+.tne-message-content td {
+  padding: 5px 8px;
+  border: 1px solid rgba(106, 127, 154, 0.26);
+  text-align: left;
+}
+
+.tne-message-content th {
+  background: rgba(15, 22, 41, 0.6);
+}
+
+/* ─── Ручка изменения ширины панели (1.15) ─── */
+.tne-resize-handle {
+  position: absolute;
+  top: 14px;
+  bottom: 14px;
+  left: 3px;
+  width: 8px;
+  z-index: 6;
+  cursor: ew-resize;
+  touch-action: none;
+}
+
+.tne-resize-handle::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 3px;
+  height: 38px;
+  transform: translate(-50%, -50%);
+  border-radius: 999px;
+  background: rgba(106, 127, 154, 0.32);
+  transition: background 0.16s ease, height 0.16s ease;
+}
+
+.tne-resize-handle:hover::after {
+  height: 60px;
+  background: rgba(13, 148, 136, 0.7);
+}
+
+#tne-page-chat-root.tne-resizing {
+  transition: none;
+  user-select: none;
+}
+
+/* ─── Иконка темы: показываем ту тему, на которую переключимся ─── */
+.tne-theme-moon,
+.tne-theme-sun {
+  display: none;
+}
+
+#tne-page-chat-root:not([data-theme="light"]) .tne-theme-sun {
+  display: block;
+}
+
+#tne-page-chat-root[data-theme="light"] .tne-theme-moon {
+  display: block;
+}
+
+/* ─── Светлая тема (1.15) ─── */
+#tne-page-chat-root[data-theme="light"] {
+  --tne-background: #eef1f7;
+  --tne-surface: #ffffff;
+  --tne-surface-variant: #f1f4f9;
+  --tne-sidebar-bg: #f3f5fa;
+  --tne-header-bg: #ffffff;
+  --tne-chat-card: #ffffff;
+  --tne-text: #16203a;
+  --tne-on-surface: #283448;
+  --tne-muted: #64748b;
+  --tne-muted-soft: #51607a;
+  --tne-border: rgba(100, 116, 139, 0.28);
+  --tne-border-strong: rgba(13, 148, 136, 0.42);
+  --tne-logo: #4f46e5;
+}
+
+#tne-page-chat-root[data-theme="light"] .tne-chat-panel {
+  background:
+    radial-gradient(circle at 20% 0%, rgba(13, 148, 136, 0.10), transparent 34%),
+    linear-gradient(180deg, #ffffff, #f3f5fa);
+  border-color: rgba(100, 116, 139, 0.28);
+  box-shadow: 0 24px 70px rgba(15, 23, 42, 0.18), 0 0 0 1px rgba(15, 23, 42, 0.03) inset;
+}
+
+#tne-page-chat-root[data-theme="light"] .tne-chat-header {
+  background: rgba(255, 255, 255, 0.92);
+  border-bottom-color: rgba(100, 116, 139, 0.18);
+}
+
+#tne-page-chat-root[data-theme="light"] .tne-icon-button,
+#tne-page-chat-root[data-theme="light"] .tne-small-button,
+#tne-page-chat-root[data-theme="light"] .tne-message-actions button,
+#tne-page-chat-root[data-theme="light"] .tne-quick-actions button,
+#tne-page-chat-root[data-theme="light"] .tne-font-menu button {
+  background: #f4f6fb;
+  border-color: rgba(100, 116, 139, 0.26);
+  color: #283448;
+}
+
+#tne-page-chat-root[data-theme="light"] .tne-quick-actions button {
+  background: linear-gradient(180deg, #ffffff, #f1f4f9);
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
+}
+
+#tne-page-chat-root[data-theme="light"] .tne-context-card {
+  background:
+    radial-gradient(circle at 4% 0%, rgba(13, 148, 136, 0.12), transparent 36%),
+    linear-gradient(135deg, rgba(13, 148, 136, 0.08), #ffffff);
+  box-shadow: 0 12px 34px rgba(13, 148, 136, 0.08), 0 0 0 1px rgba(15, 23, 42, 0.02) inset;
+}
+
+#tne-page-chat-root[data-theme="light"] .tne-context-details pre,
+#tne-page-chat-root[data-theme="light"] .tne-message-content code,
+#tne-page-chat-root[data-theme="light"] .tne-message-content pre,
+#tne-page-chat-root[data-theme="light"] #tne-chat-input {
+  background: #f1f4f9;
+  border-color: rgba(100, 116, 139, 0.22);
+  color: #283448;
+}
+
+#tne-page-chat-root[data-theme="light"] .tne-message-content code {
+  color: #9a244f;
+}
+
+#tne-page-chat-root[data-theme="light"] .tne-assistant-card {
+  background: #ffffff;
+  border-color: rgba(100, 116, 139, 0.22);
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+}
+
+#tne-page-chat-root[data-theme="light"] .tne-assistant-card--welcome {
+  background: linear-gradient(135deg, #ffffff, #f1f4f9);
+}
+
+#tne-page-chat-root[data-theme="light"] .tne-assistant-card--light {
+  background: rgba(13, 148, 136, 0.10);
+  border-color: rgba(13, 148, 136, 0.3);
+}
+
+#tne-page-chat-root[data-theme="light"] .tne-font-menu {
+  background: #ffffff;
+  border-color: rgba(100, 116, 139, 0.26);
+}
+
+#tne-page-chat-root[data-theme="light"] .tne-scope-button {
+  background: #f4f6fb;
+  border-color: rgba(100, 116, 139, 0.24);
+  color: #51607a;
+}
+
+#tne-page-chat-root[data-theme="light"] .tne-scope-button--active {
+  background: rgba(13, 148, 136, 0.16);
+  border-color: rgba(13, 148, 136, 0.6);
+  color: #16203a;
+}
+
+#tne-page-chat-root[data-theme="light"] .tne-chat-footer {
+  background: linear-gradient(180deg, rgba(243, 245, 250, 0), rgba(243, 245, 250, 0.7));
+}
+
+#tne-page-chat-root[data-theme="light"] .tne-message-content th {
+  background: #eef1f7;
+}
+
+#tne-page-chat-root[data-theme="light"] .tne-resize-handle::after {
+  background: rgba(100, 116, 139, 0.4);
+}
+
 @media (max-width: 520px) {
   #tne-page-chat-root {
     width: 100vw;

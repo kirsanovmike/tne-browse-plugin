@@ -59,23 +59,66 @@
         </label>
         <label>
           <span>Max context chars</span>
-          <input name="maxContextChars" type="number" min="1000" max="15000" />
+          <input name="maxContextChars" type="number" min="1000" max="25000" />
+        </label>
+      </div>
+
+      <div class="grid-2">
+        <label>
+          <span>Timeout, ms</span>
+          <input name="requestTimeoutMs" type="number" min="1000" />
+        </label>
+        <label>
+          <span>Повторов при сбое</span>
+          <input name="maxRetries" type="number" min="0" max="5" />
         </label>
       </div>
 
       <label>
-        <span>Timeout, ms</span>
-        <input name="requestTimeoutMs" type="number" min="1000" />
+        <span>Vision endpoint (опционально)</span>
+        <input name="visionEndpoint" type="url" placeholder="https://…/api/v1/vision" />
       </label>
 
       <button type="submit">Сохранить</button>
       <div id="status" class="status"></div>
     </form>
 
+    <form id="access-form" class="card">
+      <h2 class="card-title">Доступ по доменам</h2>
+      <label class="checkbox-row">
+        <input name="allowExternal" type="checkbox" />
+        <span>Разрешить работу на внешних сайтах (вне whitelist)</span>
+      </label>
+
+      <label>
+        <span>Whitelist доменов (по одному в строке, можно <code>*</code>)</span>
+        <textarea name="whitelist" rows="4" placeholder="*.tn.corp&#10;*.transneftenergo.ru"></textarea>
+      </label>
+
+      <label>
+        <span>Denylist доменов (всегда блокировать)</span>
+        <textarea name="denylist" rows="3" placeholder="secrets.tn.corp"></textarea>
+      </label>
+
+      <button type="submit">Сохранить доступ</button>
+      <div id="access-status" class="status"></div>
+    </form>
+
+    <section class="card">
+      <h2 class="card-title">Диагностика</h2>
+      <div class="diag-buttons">
+        <button type="button" id="diag-ping">Проверить соединение с моделью</button>
+        <button type="button" id="diag-vision">Проверить vision endpoint</button>
+        <button type="button" id="diag-payload">Показать последний payload (без токена)</button>
+        <button type="button" id="diag-error">Показать последнюю ошибку</button>
+      </div>
+      <pre id="diag-output" class="diag-output">Результаты диагностики появятся здесь.</pre>
+    </section>
+
     <section class="note">
       <strong>Для промышленного варианта:</strong> токен лучше не хранить в расширении, а ходить через backend/proxy с корпоративной авторизацией.
     </section>
   </main>
-  <script src="options.js"></script>
+  <script type="module" src="./src/options/options.ts"></script>
 </body>
 </html>

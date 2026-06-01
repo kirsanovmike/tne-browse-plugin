@@ -141,3 +141,81 @@ button:hover {
   color: var(--muted-soft);
   line-height: 1.5;
 }
+
+.card + .card,
+section.card {
+  margin-top: 16px;
+}
+
+.card-title {
+  margin: 0 0 16px;
+  font-size: 18px;
+}
+
+textarea {
+  width: 100%;
+  padding: 12px 14px;
+  color: var(--text);
+  background: rgba(15, 22, 41, 0.62);
+  border: 1px solid rgba(106, 127, 154, 0.28);
+  border-radius: 14px;
+  outline: none;
+  font: inherit;
+  resize: vertical;
+}
+
+textarea:focus {
+  border-color: rgba(13,148,136,0.72);
+  box-shadow: 0 0 0 3px rgba(13,148,136,0.14);
+}
+
+.checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.checkbox-row input {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  flex: 0 0 auto;
+}
+
+.checkbox-row span {
+  margin: 0;
+  color: var(--on-surface);
+  font-size: 14px;
+}
+
+label span code {
+  padding: 1px 5px;
+  border-radius: 5px;
+  background: rgba(15, 22, 41, 0.7);
+  color: #dbeafe;
+}
+
+.diag-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.diag-buttons button {
+  min-height: 42px;
+  font-size: 13px;
+}
+
+.diag-output {
+  max-height: 320px;
+  margin: 16px 0 0;
+  padding: 14px;
+  overflow: auto;
+  color: var(--on-surface);
+  background: rgba(15, 22, 41, 0.72);
+  border: 1px solid rgba(106, 127, 154, 0.22);
+  border-radius: 14px;
+  font: 12px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  white-space: pre-wrap;
+  word-break: break-word;
+}

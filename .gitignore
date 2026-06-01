@@ -1,0 +1,25 @@
+# Local AI/editor configs
+.claude/
+.cursor/
+
+# Project docs / local notes
+docs/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Dependencies / build
+node_modules/
+dist/
+build/
+.tmp/
+.cache/
+
+# Env / secrets
+.env
+.env.*
+*.local
