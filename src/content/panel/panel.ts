@@ -42,6 +42,11 @@ import { refreshContext, updatePayloadPreview } from "../context/refresh";
 import { startUrlWatcher, startDomWatcher } from "../spa-keeper";
 import { getSafeSelection } from "../context/text-extract";
 import { highlightBlock } from "../render/source-highlight";
+import {
+  resolveSlashCommand,
+  matchSlashCommands,
+  type SlashCommand,
+} from "../chat/slash-commands";
 
 async function computeAllowed(): Promise<boolean> {
   const settings = await readSettings();
@@ -177,6 +182,82 @@ function renderBlockedPanel(): void {
   root.querySelector("#tne-blocked-settings")?.addEventListener("click", () => browser.runtime.sendMessage({ type: "TNE_OPEN_OPTIONS" }));
 }
 
+interface SlashMenuController {
+  isOpen(): boolean;
+  update(): void;
+  move(dir: number): void;
+  confirm(): void;
+  close(): void;
+}
+
+function createSlashMenu(root: HTMLElement, input: HTMLTextAreaElement): SlashMenuController {
+  const menu = root.querySelector("#tne-slash-menu") as HTMLElement;
+  let matches: SlashCommand[] = [];
+  let active = 0;
+
+  function render(): void {
+    menu.innerHTML = "";
+    matches.forEach((cmd, i) => {
+      const item = document.createElement("div");
+      item.className = "tne-slash-item" + (i === active ? " tne-slash-item--active" : "");
+      item.setAttribute("role", "option");
+      const name = document.createElement("span");
+      name.className = "tne-slash-name";
+      name.textContent = cmd.name;
+      const hint = document.createElement("span");
+      hint.className = "tne-slash-hint";
+      hint.textContent = cmd.hint;
+      item.append(name, hint);
+      item.addEventListener("mousedown", (event) => {
+        event.preventDefault();
+        active = i;
+        confirm();
+      });
+      menu.appendChild(item);
+    });
+    menu.hidden = matches.length === 0;
+  }
+
+  function update(): void {
+    matches = matchSlashCommands(input.value);
+    if (active >= matches.length) active = 0;
+    render();
+  }
+
+  function move(dir: number): void {
+    if (!matches.length) return;
+    active = (active + dir + matches.length) % matches.length;
+    render();
+  }
+
+  function confirm(): void {
+    const cmd = matches[active];
+    if (cmd) {
+      const resolved = resolveSlashCommand(cmd.name);
+      if (resolved) {
+        input.value = resolved.prompt;
+        input.style.height = "auto";
+        input.style.height = `${Math.min(input.scrollHeight, 120)}px`;
+      }
+    }
+    close();
+    input.focus();
+  }
+
+  function close(): void {
+    matches = [];
+    menu.hidden = true;
+  }
+
+  return {
+    isOpen: () => !menu.hidden && matches.length > 0,
+    update,
+    move,
+    confirm,
+    close,
+  };
+}
+
 function buildPanelUI(root: HTMLElement): void {
   root.innerHTML = `
       <section class="tne-chat-panel" aria-label="ТНЭ чат по странице">
@@ -250,6 +331,8 @@ function buildPanelUI(root: HTMLElement): void {
           </div>
         </div>
 
+        <div class="tne-slash-menu" id="tne-slash-menu" role="listbox" hidden></div>
+
         <footer class="tne-chat-footer">
           <textarea id="tne-chat-input" rows="1" placeholder="Спросите по содержимому страницы (Ctrl+Enter — отправить)"></textarea>
           <button id="tne-chat-send" class="tne-send-button" type="button" title="Отправить" aria-label="Отправить">${SEND_ICON}</button>
@@ -280,7 +363,32 @@ function buildPanelUI(root: HTMLElement): void {
   });
 
   const input = root.querySelector("#tne-chat-input") as HTMLTextAreaElement;
+  const slash = createSlashMenu(root, input);
+
   input.addEventListener("keydown", (event) => {
+    if (slash.isOpen()) {
+      if (event.key === "ArrowDown") {
+        event.preventDefault();
+        slash.move(1);
+        return;
+      }
+      if (event.key === "ArrowUp") {
+        event.preventDefault();
+        slash.move(-1);
+        return;
+      }
+      if (event.key === "Enter" || event.key === "Tab") {
+        event.preventDefault();
+        slash.confirm();
+        return;
+      }
+      if (event.key === "Escape") {
+        event.preventDefault();
+        event.stopPropagation();
+        slash.close();
+        return;
+      }
+    }
     if (event.key === "Enter" && (event.ctrlKey || event.metaKey)) {
       event.preventDefault();
       sendQuestion();
@@ -306,6 +414,7 @@ function buildPanelUI(root: HTMLElement): void {
   input.addEventListener("input", () => {
     input.style.height = "auto";
     input.style.height = `${Math.min(input.scrollHeight, 120)}px`;
+    slash.update();
   });
 
   const quick = root.querySelector("#tne-quick-actions");

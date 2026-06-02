@@ -1143,6 +1143,47 @@
   opacity: 0;
 }
 
+/* ─── Slash-меню автокомплита (4.5) ─── */
+.tne-slash-menu {
+  margin: 0 12px;
+  border: 1px solid var(--tne-border, rgba(106, 127, 154, 0.26));
+  border-radius: 10px;
+  background: var(--tne-surface, #161e2e);
+  overflow: hidden;
+  max-height: 220px;
+  overflow-y: auto;
+}
+.tne-slash-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--tne-text, #f2f5fa);
+}
+.tne-slash-item--active,
+.tne-slash-item:hover {
+  background: var(--tne-primary, #9a244f);
+  color: #fff;
+}
+.tne-slash-name {
+  font-weight: 600;
+}
+.tne-slash-hint {
+  opacity: 0.7;
+  font-size: 12px;
+}
+
+#tne-page-chat-root[data-theme="light"] .tne-slash-menu {
+  background: #ffffff;
+  border-color: rgba(100, 116, 139, 0.28);
+}
+
+#tne-page-chat-root[data-theme="light"] .tne-slash-item {
+  color: #283448;
+}
+
 /* ─── Селектор роли ассистента (4.6) ─── */
 .tne-role-select {
   height: 30px;
