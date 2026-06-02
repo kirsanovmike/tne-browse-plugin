@@ -1208,3 +1208,32 @@
   border-color: rgba(100, 116, 139, 0.26);
   color: #283448;
 }
+
+/* ─── Кнопки шаблонов промптов (4.7) ─── */
+.tne-template-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 0 12px 8px;
+}
+
+.tne-template-actions button {
+  padding: 5px 10px;
+  border-radius: 14px;
+  border: 1px dashed var(--tne-border, rgba(106, 127, 154, 0.26));
+  background: transparent;
+  color: var(--tne-text, #f2f5fa);
+  font-size: 12px;
+  cursor: pointer;
+  transition: border-color 0.16s ease, border-style 0.16s ease;
+}
+
+.tne-template-actions button:hover {
+  border-style: solid;
+  border-color: var(--tne-primary, #9a244f);
+}
+
+#tne-page-chat-root[data-theme="light"] .tne-template-actions button {
+  color: #283448;
+  border-color: rgba(100, 116, 139, 0.38);
+}

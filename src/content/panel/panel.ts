@@ -47,6 +47,7 @@ import {
   matchSlashCommands,
   type SlashCommand,
 } from "../chat/slash-commands";
+import { applyTemplateVariables, firstTableBlock } from "../../shared/templates";
 
 async function computeAllowed(): Promise<boolean> {
   const settings = await readSettings();
@@ -317,6 +318,7 @@ function buildPanelUI(root: HTMLElement): void {
         <main class="tne-chat-messages elegant-scroll" id="tne-chat-messages"></main>
 
         <div class="tne-quick-actions" id="tne-quick-actions"></div>
+        <div class="tne-template-actions" id="tne-template-actions" hidden></div>
 
         <div class="tne-attach-bar">
           <div class="tne-pdf-bar" id="tne-pdf-bar" hidden></div>
@@ -429,6 +431,8 @@ function buildPanelUI(root: HTMLElement): void {
     quick?.appendChild(button);
   });
 
+  void initTemplateButtons(root);
+
   renderWelcomeMessage();
 
   const messagesEl = root.querySelector("#tne-chat-messages");
@@ -446,6 +450,41 @@ function buildPanelUI(root: HTMLElement): void {
     keyEvent.preventDefault();
     highlightBlock(id);
   });
+}
+
+async function initTemplateButtons(root: HTMLElement): Promise<void> {
+  const row = root.querySelector("#tne-template-actions") as HTMLElement | null;
+  const input = root.querySelector("#tne-chat-input") as HTMLTextAreaElement | null;
+  if (!row || !input) return;
+
+  const settings = await readSettings();
+  const templates = settings.promptTemplates || [];
+  row.innerHTML = "";
+  if (!templates.length) {
+    row.hidden = true;
+    return;
+  }
+
+  for (const tpl of templates) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.textContent = tpl.label || "Без названия";
+    button.title = "Шаблон промпта";
+    button.addEventListener("click", async () => {
+      if (STATE.contextDirty || !STATE.page) await refreshContext(false, "template");
+      const vars = {
+        selection: STATE.page?.selection || getSafeSelection() || "",
+        url: location.href,
+        table: firstTableBlock(STATE.page?.text || ""),
+      };
+      input.value = applyTemplateVariables(tpl.body, vars);
+      input.style.height = "auto";
+      input.style.height = `${Math.min(input.scrollHeight, 120)}px`;
+      input.focus();
+    });
+    row.appendChild(button);
+  }
+  row.hidden = false;
 }
 
 async function initRoleSelect(root: HTMLElement): Promise<void> {
