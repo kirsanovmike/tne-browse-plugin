@@ -8,6 +8,7 @@
  */
 import { browser } from "../shared/browser";
 import { togglePanel, askBySelection } from "./panel/panel";
+import { initFloatingButton } from "./selection/floating-button";
 
 declare global {
   interface Window {
@@ -23,6 +24,8 @@ if (!window.__TNE_PAGE_CHAT_LOADED__) {
     if (type === "TNE_TOGGLE_PANEL") togglePanel();
     else if (type === "TNE_ASK_SELECTION") askBySelection();
   });
+
+  initFloatingButton();
 }
 
 export {};
