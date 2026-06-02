@@ -51,6 +51,15 @@ export const QUICK_ACTIONS = [
 
 export type Theme = "dark" | "light";
 
+export interface Attachment {
+  id: string;
+  dataUrl: string; // сжатый превью
+  base64: string; // чистый base64 для отправки
+  source: "screenshot" | "region" | "upload";
+  bytes: number;
+  name?: string;
+}
+
 export interface ContentState {
   opened: boolean;
   allowed: boolean | null;
@@ -60,6 +69,7 @@ export interface ContentState {
   page: PageContext | null;
   blockMap: Record<string, Element>;
   history: ChatHistoryItem[];
+  attachments: Attachment[];
   isSending: boolean;
   currentRequestId: string | null;
   lastQuestion: string;
@@ -85,6 +95,7 @@ export const STATE: ContentState = {
   page: null,
   blockMap: {},
   history: [],
+  attachments: [],
   isSending: false,
   currentRequestId: null,
   lastQuestion: "",
