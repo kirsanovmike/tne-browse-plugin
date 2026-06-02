@@ -17,7 +17,8 @@ import {
   $,
   type ScopeId,
 } from "../state";
-import { readSettings } from "../../shared/settings";
+import { readSettings, writeSettings } from "../../shared/settings";
+import { ROLE_PRESETS, DEFAULT_ROLE_ID } from "../../shared/roles";
 import { isHostAllowed } from "../../shared/whitelist";
 import { escapeHtml } from "../../shared/text";
 import {
@@ -188,6 +189,7 @@ function buildPanelUI(root: HTMLElement): void {
             </div>
           </div>
           <div class="tne-chat-header-actions">
+            <select class="tne-role-select" id="tne-role-select" title="Роль ассистента" aria-label="Роль ассистента"></select>
             <div class="tne-font-menu-wrap" id="tne-font-menu-wrap">
               <button class="tne-icon-button" id="tne-font-trigger" title="Размер текста" type="button" aria-label="Размер текста">${FONT_ICON}</button>
               <div class="tne-font-menu" id="tne-font-menu" aria-label="Размер текста">
@@ -261,6 +263,7 @@ function buildPanelUI(root: HTMLElement): void {
   initThemeControl(root);
   initResizeHandle(root);
   buildScopeRow(root);
+  void initRoleSelect(root);
   initAttachments(root);
   initPdf(root);
 
@@ -333,6 +336,23 @@ function buildPanelUI(root: HTMLElement): void {
     if (!id) return;
     keyEvent.preventDefault();
     highlightBlock(id);
+  });
+}
+
+async function initRoleSelect(root: HTMLElement): Promise<void> {
+  const select = root.querySelector("#tne-role-select") as HTMLSelectElement | null;
+  if (!select) return;
+  select.innerHTML = "";
+  for (const role of ROLE_PRESETS) {
+    const opt = document.createElement("option");
+    opt.value = role.id;
+    opt.textContent = role.label;
+    select.appendChild(opt);
+  }
+  const settings = await readSettings();
+  select.value = settings.roleId || DEFAULT_ROLE_ID;
+  select.addEventListener("change", () => {
+    void writeSettings({ roleId: select.value });
   });
 }
 

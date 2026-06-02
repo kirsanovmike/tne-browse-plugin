@@ -1142,3 +1142,28 @@
 .tne-toast--hide {
   opacity: 0;
 }
+
+/* ─── Селектор роли ассистента (4.6) ─── */
+.tne-role-select {
+  height: 30px;
+  max-width: 130px;
+  padding: 0 6px;
+  border-radius: 8px;
+  border: 1px solid var(--tne-border, rgba(106, 127, 154, 0.26));
+  background: var(--tne-surface, #161e2e);
+  color: var(--tne-text, #f2f5fa);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  transition: border-color 0.16s ease, background 0.16s ease;
+}
+.tne-role-select:focus-visible {
+  outline: 2px solid var(--tne-primary, #9a244f);
+  outline-offset: 1px;
+}
+
+#tne-page-chat-root[data-theme="light"] .tne-role-select {
+  background: #f4f6fb;
+  border-color: rgba(100, 116, 139, 0.26);
+  color: #283448;
+}
