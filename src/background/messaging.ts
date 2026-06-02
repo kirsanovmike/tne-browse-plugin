@@ -19,7 +19,7 @@ import type {
   GetDiagResponse,
   OkResponse,
 } from "../shared/messages";
-import { askModel, buildBody, normalizeError, abortRequest } from "./llm-client";
+import { askModel, buildBody, normalizeError, abortRequest, redactImagesForPreview } from "./llm-client";
 import { diagSink, diagPing, getDiag } from "./diagnostics";
 import { captureActiveTab } from "./capture";
 
@@ -68,9 +68,12 @@ export function routeMessage(message: unknown): false | Promise<RouteResult> {
       return Promise.resolve<OkResponse>({ ok: true });
 
     case "TNE_BUILD_PAYLOAD":
-      // Предпросмотр тела запроса — БЕЗ токена (токен живёт только в заголовках).
+      // Предпросмотр тела запроса — БЕЗ токена и БЕЗ гигантского base64 (плейсхолдеры).
       return readSettings().then(
-        (settings): BuildPayloadResponse => ({ ok: true, body: buildBody(message.payload, settings) })
+        (settings): BuildPayloadResponse => ({
+          ok: true,
+          body: redactImagesForPreview(buildBody(message.payload, settings)),
+        })
       );
 
     case "TNE_DIAG_PING":
