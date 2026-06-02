@@ -299,12 +299,12 @@ function buildPanelUI(root: HTMLElement): void {
   });
 
   const quick = root.querySelector("#tne-quick-actions");
-  QUICK_ACTIONS.forEach((text) => {
+  QUICK_ACTIONS.forEach((action) => {
     const button = document.createElement("button");
     button.type = "button";
-    button.textContent = text;
+    button.textContent = action.label;
     button.addEventListener("click", () => {
-      input.value = text;
+      input.value = action.prompt;
       sendQuestion();
     });
     quick?.appendChild(button);
