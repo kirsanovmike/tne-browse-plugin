@@ -26,6 +26,11 @@ describe("DEFAULT_SETTINGS", () => {
   it("hard-caps context length at 25000", () => {
     expect(MAX_CONTEXT_HARD_LIMIT).toBe(25000);
   });
+
+  it("defaults the assistant role to general and templates to empty", () => {
+    expect(DEFAULT_SETTINGS.roleId).toBe("general");
+    expect(DEFAULT_SETTINGS.promptTemplates).toEqual([]);
+  });
 });
 
 describe("coerceModelSettings", () => {

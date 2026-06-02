@@ -7,6 +7,8 @@
  */
 
 import { browser } from "./browser";
+import { DEFAULT_ROLE_ID } from "./roles";
+import type { PromptTemplate } from "./templates";
 
 export interface Settings {
   endpoint: string;
@@ -25,6 +27,8 @@ export interface Settings {
   panelFontSize: number;
   allowExternal: boolean;
   autoScreenshot: boolean;
+  roleId: string;
+  promptTemplates: PromptTemplate[];
   whitelist: string[];
   denylist: string[];
 }
@@ -49,6 +53,8 @@ export const DEFAULT_SETTINGS: Settings = {
   panelFontSize: 12,
   allowExternal: false,
   autoScreenshot: false,
+  roleId: DEFAULT_ROLE_ID,
+  promptTemplates: [],
   whitelist: ["*.tn.corp", "*.transneftenergo.ru"],
   denylist: [],
 };
