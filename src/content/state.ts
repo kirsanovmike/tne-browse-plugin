@@ -55,9 +55,22 @@ export interface Attachment {
   id: string;
   dataUrl: string; // сжатый превью
   base64: string; // чистый base64 для отправки
-  source: "screenshot" | "region" | "upload";
+  source: "screenshot" | "region" | "upload" | "pdf";
   bytes: number;
   name?: string;
+  page?: number; // номер страницы PDF (для source: "pdf")
+}
+
+export interface PdfState {
+  name: string;
+  numPages: number;
+  selectionMode: "first5" | "choose" | "current";
+  selectionInput: string; // сырой ввод для режима «choose»
+  pages: number[]; // разобранные номера выбранных страниц
+  currentPage: number | null; // если PDF открыт во вкладке и страница известна
+  hasTextLayer: boolean;
+  withImages: boolean; // прикладывать ли страницы картинками
+  documentText: string; // готовое тело блока [DOCUMENT]
 }
 
 export interface ContentState {
@@ -70,6 +83,7 @@ export interface ContentState {
   blockMap: Record<string, Element>;
   history: ChatHistoryItem[];
   attachments: Attachment[];
+  pdf: PdfState | null;
   isSending: boolean;
   currentRequestId: string | null;
   lastQuestion: string;
@@ -96,6 +110,7 @@ export const STATE: ContentState = {
   blockMap: {},
   history: [],
   attachments: [],
+  pdf: null,
   isSending: false,
   currentRequestId: null,
   lastQuestion: "",

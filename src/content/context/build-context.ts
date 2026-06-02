@@ -64,6 +64,17 @@ export function buildStructuredContext(maxChars: number, scope: ScopeId = "all")
     sections.push({ tag: "SELECTED", header: "[SELECTED]", body: selection, priority: 1 });
   }
 
+  // [DOCUMENT] — текст загруженного PDF (Phase 3). Высокий приоритет удержания:
+  // если пользователь загрузил документ, он и есть предмет вопроса.
+  if (STATE.pdf?.documentText) {
+    sections.push({
+      tag: "DOCUMENT",
+      header: "[DOCUMENT D1]",
+      body: STATE.pdf.documentText,
+      priority: 1,
+    });
+  }
+
   if (scope === "all" || scope === "visible") {
     collectModals().forEach((modal, index) => {
       const id = `M${index + 1}`;

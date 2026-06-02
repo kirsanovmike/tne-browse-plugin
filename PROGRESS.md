@@ -269,6 +269,14 @@
   другие `modelId`/`mode`, чем для текста. Пока шлём те же (тело с `files` по
   `api doc.md` работает на основном endpoint). Уточнить у владельца, если
   vision-ответы окажутся пустыми/некорректными.
+- **CSP воркера PDF.js (Phase 3).** Worker грузится из расширения
+  (`runtime.getURL("pdf.worker.min.mjs")`) в page-контексте; на сайтах со строгим
+  `worker-src`/`script-src` создание воркера может блокироваться CSP страницы.
+  Fallback — загрузка PDF файлом (всегда работает). Подтвердить на реальных
+  корпоративных доменах.
+- **Автодетект PDF во вкладке (Phase 3).** В штатном PDF-просмотрщике браузера
+  content-скрипт часто не внедряется → автодетект best-effort (по `*.pdf` в URL +
+  `fetch` байтов вкладки); надёжный путь — загрузка файла.
 
 ## Лог по задачам
 
@@ -400,3 +408,49 @@
 - Смоук-тест в `vm`: `marked`, `hljs`, `Readability` корректно экспортируются как
   глобалы при изоляции, аналогичной content-script sandbox; `marked.parse` рендерит.
 - Ручную проверку в Firefox на 3 сайтах выполняет владелец (см. «Проверка» в плане).
+
+## PHASE 3 — Документ (PDF) (3.1–3.4)
+
+Дизайн: `docs/superpowers/specs/2026-06-02-phase3-pdf-design.md`; план:
+`docs/superpowers/plans/2026-06-02-phase3-pdf.md`. Выполнено subagent-driven на
+ветке `phase3-pdf`. Все P0 (3.1–3.4).
+
+**Ключевой вывод:** изображения страниц PDF переиспользуют существующий поток
+вложений Phase 2 (`messages[].files`, общий лимит 5 картинок), а текстовый слой
+вставляется в структурированный контекст как блок `[DOCUMENT D1]` (под обрезку по
+приоритету и под `scanSensitive`-гейт). Отдельного vision-флоу не вводилось.
+
+- **PDF.js локально** — `pdfjs-dist@4.10.38` из npm, бандлится Vite в content-IIFE.
+  Worker `pdf.worker.min.mjs` копируется `viteStaticCopy` в корень `dist/<browser>`
+  и объявлен в `web_accessible_resources`; в рантайме
+  `GlobalWorkerOptions.workerSrc = runtime.getURL(...)`. CDN нет (проверено `grep`
+  по `dist/`). Обработка PDF — в content (нужен canvas; в Chromium SW его нет).
+- **[3.1] Загрузка + автодетект** — кнопка 📄 + `input[accept=application/pdf]`
+  (надёжный путь); автодетект по `*.pdf` в URL при открытии панели → предложение
+  «Загрузить из вкладки» (`fetch` байтов same-origin). `pdf-attachments.ts`.
+- **[3.2] Текстовый слой** — `pdf-text.ts:extractPageText` (склейка элементов,
+  переносы по `hasEOL`) → блок `[DOCUMENT D1]` с под-страницами `[PDF Pn]`.
+- **[3.3] Слой картинок** — `pdf-render.ts:renderPageToDataUrl` (detached canvas,
+  scale 2.0) → `compressDataUrl` → вложения `source:"pdf"`. Включается
+  автоматически для сканов (`scan-detect.ts:looksLikeScan`, порог 100 симв/стр)
+  или вручную тогглом. До 5 картинок (общий бюджет со скриншотами).
+- **[3.4] Выбор страниц** — UI-режимы «Первые 5» / «Выбрать» (поле «1-3,12»,
+  парсер `page-range.ts`) / «Текущая» (если PDF во вкладке и `#page=N` известен);
+  прогресс рендера статус-строкой; сообщение про лимит картинок. Текст — для всех
+  выбранных страниц; картинки — для первых ≤5.
+- **Файлы:** new `src/content/pdf/{page-range,scan-detect,pdf-loader,pdf-text,
+  pdf-render,pdf-attachments}.ts`; правки `src/shared/limits.ts`,
+  `src/content/state.ts` (`PdfState`, `Attachment.source:"pdf"`),
+  `src/content/context/build-context.ts` (блок `[DOCUMENT]`),
+  `src/background/llm-client.ts` (перечень блоков в промпте),
+  `src/content/vision/attachments.ts` (`addAttachment` экспорт,
+  `clearAttachments({keepPdf})`), `src/content/panel/{chat,panel,icons}.ts`,
+  `src/content/panel/panel.css`, `manifest.config.ts` (worker в WAR),
+  `vite.config.ts` (копирование worker), `package.json`. Тесты:
+  `tests/content/pdf/{page-range,scan-detect}.test.ts` (+16).
+- **Проверка:** `npm run ci` зелёный — `tsc --noEmit` (strict) чист; `vitest run` —
+  **122/122** (106 прежних + 16 новых: 11 page-range + 5 scan-detect);
+  `npm run build` собирает `dist/firefox` и `dist/chrome` (MV3) с worker в корне;
+  CDN-ссылок в `dist/` нет. Ручную проверку в Firefox+Chromium (текстовый PDF,
+  скан, выбор страниц «1-3,12», большой PDF с прогрессом, автодетект, очистка)
+  выполняет владелец (как в Phase 1/2).

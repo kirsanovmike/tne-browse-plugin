@@ -18,3 +18,12 @@ export const VISION_TIMEOUT_MS = 120000;
 
 /** Минимальный интервал между захватами экрана, мс (= ≤2 вызова/сек). */
 export const CAPTURE_MIN_INTERVAL_MS = 500;
+
+/** Масштаб рендера страницы PDF в canvas (затем compressDataUrl ужимает до IMAGE_MAX_SIDE). */
+export const PDF_RENDER_SCALE = 2.0;
+
+/** Порог эвристики «скан»: меньше символов на страницу → считаем бедным текстовым слоем. */
+export const PDF_SCAN_MIN_CHARS_PER_PAGE = 100;
+
+/** Дефолт «первые N страниц» при загрузке PDF. */
+export const PDF_DEFAULT_PAGES = 5;
