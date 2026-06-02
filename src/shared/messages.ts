@@ -36,7 +36,8 @@ export type TneRequest =
   | { type: "TNE_BUILD_PAYLOAD"; payload: BuildPayloadPayload }
   | { type: "TNE_DIAG_PING"; target: DiagTarget }
   | { type: "TNE_CAPTURE_TAB" }
-  | { type: "TNE_GET_DIAG" };
+  | { type: "TNE_GET_DIAG" }
+  | { type: "TNE_SELECTION_ACTION"; actionId: string };
 
 export type TneRequestType = TneRequest["type"];
 

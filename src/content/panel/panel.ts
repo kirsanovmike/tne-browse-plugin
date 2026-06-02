@@ -40,6 +40,7 @@ import { initPdf, setDetectedTabPdf } from "../pdf/pdf-attachments";
 import { refreshContext, updatePayloadPreview } from "../context/refresh";
 import { startUrlWatcher, startDomWatcher } from "../spa-keeper";
 import { getSafeSelection } from "../context/text-extract";
+import { highlightBlock } from "../render/source-highlight";
 
 async function computeAllowed(): Promise<boolean> {
   const settings = await readSettings();
@@ -74,8 +75,9 @@ export async function togglePanel(): Promise<void> {
   }
 }
 
-// Хоткей «спросить по выделению»: открыть панель, режим «Выделение», задать вопрос.
-export async function askBySelection(): Promise<void> {
+// Открыть панель в режиме «Выделение» и задать вопрос с переданным промптом.
+// Базис для хоткея «спросить по выделению» и действий по выделению (4.4).
+export async function askWithSelectionPrompt(prompt: string): Promise<void> {
   ensureHost();
   STATE.allowed = await computeAllowed();
 
@@ -104,8 +106,13 @@ export async function askBySelection(): Promise<void> {
     return;
   }
 
-  if (input && !input.value.trim()) input.value = "Объясни выделенный фрагмент";
+  if (input && !input.value.trim()) input.value = prompt;
   sendQuestion();
+}
+
+// Хоткей «спросить по выделению» (1.15) — действие по умолчанию «объяснить».
+export async function askBySelection(): Promise<void> {
+  return askWithSelectionPrompt("Объясни выделенный фрагмент");
 }
 
 function ensureHost(): HTMLElement {
@@ -299,18 +306,34 @@ function buildPanelUI(root: HTMLElement): void {
   });
 
   const quick = root.querySelector("#tne-quick-actions");
-  QUICK_ACTIONS.forEach((text) => {
+  QUICK_ACTIONS.forEach((action) => {
     const button = document.createElement("button");
     button.type = "button";
-    button.textContent = text;
+    button.textContent = action.label;
     button.addEventListener("click", () => {
-      input.value = text;
+      input.value = action.prompt;
       sendQuestion();
     });
     quick?.appendChild(button);
   });
 
   renderWelcomeMessage();
+
+  const messagesEl = root.querySelector("#tne-chat-messages");
+  messagesEl?.addEventListener("click", (event) => {
+    const link = (event.target as HTMLElement | null)?.closest?.(".tne-source-link") as HTMLElement | null;
+    const id = link?.dataset.blockId;
+    if (id) highlightBlock(id);
+  });
+  messagesEl?.addEventListener("keydown", (event) => {
+    const keyEvent = event as KeyboardEvent;
+    if (keyEvent.key !== "Enter" && keyEvent.key !== " ") return;
+    const link = (keyEvent.target as HTMLElement | null)?.closest?.(".tne-source-link") as HTMLElement | null;
+    const id = link?.dataset.blockId;
+    if (!id) return;
+    keyEvent.preventDefault();
+    highlightBlock(id);
+  });
 }
 
 function buildScopeRow(root: HTMLElement): void {
