@@ -27,6 +27,9 @@ async function init(): Promise<void> {
     if (field) field.value = String(value);
   }
 
+  (form.elements.namedItem("autoScreenshot") as HTMLInputElement).checked =
+    Boolean(settings.autoScreenshot);
+
   (accessForm.elements.namedItem("allowExternal") as HTMLInputElement).checked =
     Boolean(settings.allowExternal);
   (accessForm.elements.namedItem("whitelist") as HTMLTextAreaElement).value = (
@@ -39,7 +42,10 @@ async function init(): Promise<void> {
 
 form.addEventListener("submit", async (event) => {
   event.preventDefault();
-  await writeSettings(coerceModelSettings(toRecord(new FormData(form))));
+  await writeSettings({
+    ...coerceModelSettings(toRecord(new FormData(form))),
+    autoScreenshot: (form.elements.namedItem("autoScreenshot") as HTMLInputElement).checked,
+  });
   flash(status, "Настройки сохранены.");
 });
 
