@@ -103,7 +103,7 @@ export async function sendQuestion(force = false): Promise<void> {
     const answer = response.data?.content || "Пустой ответ модели.";
     STATE.history.push({ role: "user", content: question }, { role: "assistant", content: answer });
     addAssistantMessage(answer, { latencyMs: response.data?.latencyMs });
-    clearAttachments();
+    clearAttachments({ keepPdf: true });
   } catch (error) {
     removeLoader(loaderId);
     addErrorMessage((error as Error)?.message || String(error), question);

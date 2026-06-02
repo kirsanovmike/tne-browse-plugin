@@ -22,8 +22,8 @@ export function attachmentImages(): string[] {
   return STATE.attachments.map((a) => a.base64);
 }
 
-export function clearAttachments(): void {
-  STATE.attachments = [];
+export function clearAttachments(opts: { keepPdf?: boolean } = {}): void {
+  STATE.attachments = opts.keepPdf ? STATE.attachments.filter((a) => a.source === "pdf") : [];
   renderAttachments();
 }
 
@@ -32,7 +32,7 @@ function removeAttachment(id: string): void {
   renderAttachments();
 }
 
-function addAttachment(att: Attachment): boolean {
+export function addAttachment(att: Attachment): boolean {
   if (STATE.attachments.length >= MAX_IMAGES) {
     addAssistantMessage(`Можно приложить не более ${MAX_IMAGES} изображений.`, { light: true });
     return false;
