@@ -15,6 +15,7 @@ import { compressDataUrl } from "../vision/image-compressor";
 import { addAttachment, renderAttachments } from "../vision/attachments";
 import { addAssistantMessage } from "../panel/chat";
 import { refreshContext } from "../context/refresh";
+import { escapeHtml } from "../../shared/text";
 
 // PDFDocumentProxy не сериализуется → держим вне STATE, на уровне модуля.
 let currentDoc: PDFDocumentProxy | null = null;
@@ -111,10 +112,8 @@ export async function applyPdfSelection(): Promise<void> {
   // 2) Картинки: для сканов автоматически, иначе по тогглу. Лимит — общий бюджет.
   const wantImages = pdf.withImages || !pdf.hasTextLayer;
   STATE.attachments = STATE.attachments.filter((a) => a.source !== "pdf");
-  let renderedTo = 0;
-  if (wantImages) {
-    const nonPdf = STATE.attachments.length;
-    const budget = Math.max(0, MAX_IMAGES - nonPdf);
+  const budget = wantImages ? Math.max(0, MAX_IMAGES - STATE.attachments.length) : 0;
+  if (wantImages && budget > 0) {
     const toRender = pages.slice(0, budget);
     for (let i = 0; i < toRender.length; i++) {
       const p = toRender[i]!;
@@ -123,7 +122,6 @@ export async function applyPdfSelection(): Promise<void> {
       const img = await compressDataUrl(dataUrl);
       const ok = addAttachment({ id: makeId(), dataUrl: img.dataUrl, base64: img.base64, source: "pdf", bytes: img.bytes, page: p });
       if (!ok) break;
-      renderedTo = p;
     }
   }
 
@@ -132,13 +130,19 @@ export async function applyPdfSelection(): Promise<void> {
   renderAttachments();
   renderPdfBar();
 
-  // 4) Сообщить пользователю, что уйдёт.
-  if (wantImages && renderedTo && pages.length > STATE.attachments.filter((a) => a.source === "pdf").length) {
-    setPdfStatus(`Отправлю текст выбранных страниц + изображения страниц по ${renderedTo} (лимит ${MAX_IMAGES} картинок).`);
-  } else if (wantImages) {
-    setPdfStatus(`Готово: текст + изображения ${STATE.attachments.filter((a) => a.source === "pdf").length} стр.`);
-  } else {
+  // 4) Сообщить пользователю, что уйдёт (по фактически приложенным страницам).
+  const sent = STATE.attachments
+    .filter((a) => a.source === "pdf")
+    .map((a) => a.page)
+    .filter((p): p is number => typeof p === "number");
+  if (!wantImages) {
     setPdfStatus(`Готово: текст ${pages.length} стр. (картинки выключены).`);
+  } else if (sent.length === 0) {
+    setPdfStatus(`Лимит картинок исчерпан вложениями — отправлю только текст ${pages.length} стр.`);
+  } else if (sent.length < pages.length) {
+    setPdfStatus(`Отправлю текст выбранных страниц + изображения стр. ${sent.join(", ")} (лимит ${MAX_IMAGES} картинок).`);
+  } else {
+    setPdfStatus(`Готово: текст + изображения стр. ${sent.join(", ")}.`);
   }
 }
 
@@ -197,7 +201,7 @@ export function renderPdfBar(): void {
     : "";
   bar.innerHTML = `
     <div class="tne-pdf-head">
-      <span class="tne-pdf-name" title="${pdf.name}">${pdf.name}</span>
+      <span class="tne-pdf-name" title="${escapeHtml(pdf.name)}">${escapeHtml(pdf.name)}</span>
       <span class="tne-pdf-pages">${pdf.numPages} стр.</span>
       <button class="tne-icon-button" id="tne-pdf-remove" type="button" title="Убрать PDF" aria-label="Убрать PDF">×</button>
     </div>
@@ -205,7 +209,7 @@ export function renderPdfBar(): void {
       <label><input type="radio" name="tne-pdf-mode" value="first5" ${pdf.selectionMode === "first5" ? "checked" : ""}/> Первые ${PDF_DEFAULT_PAGES}</label>
       <label><input type="radio" name="tne-pdf-mode" value="choose" ${pdf.selectionMode === "choose" ? "checked" : ""}/> Выбрать</label>
       ${cur}
-      <input class="tne-pdf-range" id="tne-pdf-range" type="text" placeholder="1-3,12" value="${pdf.selectionInput}" ${pdf.selectionMode === "choose" ? "" : "disabled"} />
+      <input class="tne-pdf-range" id="tne-pdf-range" type="text" placeholder="1-3,12" value="${escapeHtml(pdf.selectionInput)}" ${pdf.selectionMode === "choose" ? "" : "disabled"} />
     </div>
     <label class="tne-pdf-images"><input type="checkbox" id="tne-pdf-toggle-images" ${pdf.withImages ? "checked" : ""}/> Приложить страницы картинками</label>
     <div class="tne-pdf-status" id="tne-pdf-status"></div>`;
