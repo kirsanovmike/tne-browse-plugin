@@ -9,6 +9,7 @@
 import { browser } from "../shared/browser";
 import { togglePanel, askBySelection } from "./panel/panel";
 import { initFloatingButton } from "./selection/floating-button";
+import { runSelectionAction } from "./selection/actions";
 
 declare global {
   interface Window {
@@ -23,6 +24,10 @@ if (!window.__TNE_PAGE_CHAT_LOADED__) {
     const type = (message as { type?: string } | null)?.type;
     if (type === "TNE_TOGGLE_PANEL") togglePanel();
     else if (type === "TNE_ASK_SELECTION") askBySelection();
+    else if (type === "TNE_SELECTION_ACTION") {
+      const actionId = (message as { actionId?: string } | null)?.actionId || "explain";
+      runSelectionAction(actionId);
+    }
   });
 
   initFloatingButton();

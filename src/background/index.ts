@@ -11,6 +11,7 @@ import { browser } from "../shared/browser";
 import { DEFAULT_SETTINGS } from "../shared/settings";
 import { sendOrInject } from "./injector";
 import { routeMessage } from "./messaging";
+import { SELECTION_ACTION_META, SELECTION_MENU_PREFIX } from "../shared/selection-actions";
 
 // Засеять дефолты при установке/обновлении (token не трогаем).
 browser.runtime.onInstalled.addListener(async () => {
@@ -24,6 +25,8 @@ browser.runtime.onInstalled.addListener(async () => {
   }
 
   if (Object.keys(patch).length) await browser.storage.local.set(patch);
+
+  await createSelectionMenu();
 });
 
 // Клик по кнопке на тулбаре — открыть/закрыть панель (внедрив при первом клике).
@@ -48,3 +51,34 @@ browser.commands.onCommand.addListener(async (command) => {
 });
 
 browser.runtime.onMessage.addListener((message: unknown) => routeMessage(message));
+
+// 4.4: контекстное меню по выделению. Пункты строятся из shared-meta; промпт
+// исполняется в content (runSelectionAction). Меню пересоздаётся при установке.
+async function createSelectionMenu(): Promise<void> {
+  try {
+    await browser.contextMenus.removeAll();
+    browser.contextMenus.create({ id: "tne-sel-parent", title: "ТНЭ чат", contexts: ["selection"] });
+    for (const action of SELECTION_ACTION_META) {
+      browser.contextMenus.create({
+        id: `${SELECTION_MENU_PREFIX}${action.id}`,
+        parentId: "tne-sel-parent",
+        title: action.label,
+        contexts: ["selection"],
+      });
+    }
+  } catch (error) {
+    console.error("TNE context menu setup failed", error);
+  }
+}
+
+browser.contextMenus.onClicked.addListener(async (info, tab) => {
+  const menuItemId = String(info.menuItemId || "");
+  if (!menuItemId.startsWith(SELECTION_MENU_PREFIX)) return;
+  if (!tab || tab.id === undefined) return;
+  const actionId = menuItemId.slice(SELECTION_MENU_PREFIX.length);
+  try {
+    await sendOrInject(tab.id, { type: "TNE_SELECTION_ACTION", actionId });
+  } catch (error) {
+    console.error("TNE selection action failed", error);
+  }
+});

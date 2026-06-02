@@ -90,7 +90,7 @@ export function getManifest({ browser }: BuildEnv): Record<string, unknown> {
     },
     // MV3: хосты вынесены из permissions в host_permissions. scripting — для
     // динамической инъекции content-скрипта (см. injector.ts).
-    permissions: ["activeTab", "storage", "scripting", "tabs"],
+    permissions: ["activeTab", "storage", "scripting", "tabs", "contextMenus"],
     host_permissions: ["<all_urls>"],
     ...geckoSettings,
     // M3: panel.css и тема highlight.js инлайнятся в shadow root → не WAR.
