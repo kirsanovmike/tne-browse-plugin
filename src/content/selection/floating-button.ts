@@ -57,10 +57,12 @@ export async function initFloatingButton(): Promise<void> {
   document.addEventListener("mouseup", onMouseUp, true);
   document.addEventListener("selectionchange", onSelectionChange);
   document.addEventListener("mousedown", onDocMouseDown, true);
-  document.addEventListener("scroll", hideFab, true);
-  document.addEventListener("keydown", (event) => {
-    if ((event as KeyboardEvent).key === "Escape") hideFab();
-  }, true);
+  document.addEventListener("scroll", hideFab, { capture: true, passive: true });
+  document.addEventListener("keydown", onKeyDown, true);
+}
+
+function onKeyDown(event: KeyboardEvent): void {
+  if (event.key === "Escape") hideFab();
 }
 
 function inOwnUi(event: Event): boolean {
