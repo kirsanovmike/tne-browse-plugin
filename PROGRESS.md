@@ -504,3 +504,64 @@
   `[DOCUMENT D1]`, 6 быстрых кнопок, плавающая кнопка/контекстное меню на
   выделении, неактивность кнопки вне whitelist) выполняет владелец (как в Phase
   1–3).
+
+## PHASE 4 — Продуктовый UX (P1 4.5–4.8)
+
+Дизайн: `docs/superpowers/specs/2026-06-02-phase4-ux-p1-design.md`; план:
+`docs/superpowers/plans/2026-06-02-phase4-ux-p1.md`. Выполнено subagent-driven на
+ветке `phase4-ux-p1`. Все P1 (4.5–4.8). Контракт сообщений (`src/shared/messages.ts`)
+и манифест (`manifest.config.ts`) НЕ менялись (проверено `git diff` vs master):
+роль применяется на стороне фона из `settings.roleId`, slash/шаблоны/кнопки —
+целиком в content.
+
+- **[4.5] Slash-команды** — `src/content/chat/slash-commands.ts` (чистый, Vitest):
+  `SLASH_COMMANDS` (6 команд), `resolveSlashCommand` («команда → промпт», аргумент
+  для `/translate ru|en`), `matchSlashCommands` (префиксный матчер). UI —
+  автокомплит-поповер `#tne-slash-menu` в `panel.ts` (`createSlashMenu`):
+  интегрирован в ЕДИНЫЙ keydown инпута (ArrowUp/Down/Enter/Tab/Esc только при
+  открытом меню; на Esc — `stopPropagation`, чтобы не закрыть панель), `input` →
+  `slash.update()`. Выбор подставляет промпт в textarea (редактируемо, без
+  авто-отправки).
+- **[4.6] Роли системного промпта** — `src/shared/roles.ts` (чистый, Vitest):
+  `ROLE_PRESETS` = «Базовый» (нейтральный дефолт, пустая добавка) + аналитик/
+  поддержка/разработчик/комплаенс; `resolveRolePrompt`. `settings.roleId`
+  (дефолт `general`). `buildPrompt(payload, rolePrompt)` вставляет добавку в intro;
+  `buildBody` берёт `resolveRolePrompt(settings.roleId)` — без изменения payload.
+  UI — `<select id="tne-role-select">` в шапке (`initRoleSelect`, читает/пишет
+  `roleId` в storage.local, тема dark/light).
+- **[4.7] Библиотека шаблонов** — `src/shared/templates.ts` (чистый, Vitest):
+  `PromptTemplate`, `applyTemplateVariables` (`{{выделение}}/{{url}}/{{таблица}}`,
+  терпим к пробелам/регистру), `firstTableBlock` (первый `[TABLE Tn]` из контекста),
+  `parseImportedTemplates` (валидация импорта), `newTemplateId`, `TEMPLATES_KEY`.
+  `settings.promptTemplates` (дефолт `[]`). Options — карточка «Библиотека промптов»
+  (CRUD: add/save/удалить + Экспорт скачиванием JSON + Импорт файлом с догенерацией
+  id; импорт ДОПИСЫВАЕТ и требует явного «Сохранить»). Панель — ряд
+  `#tne-template-actions` (`initTemplateButtons`): клик собирает vars из контекста
+  (selection/url/первая таблица) и подставляет тело в input (без авто-отправки);
+  ряд скрыт без шаблонов.
+- **[4.8] Кнопки под ответом** — `chat.ts` `addAssistantMessage`: «Продолжить» /
+  «Короче» / «Подробнее» (`sendFollowUp` — преднастроенная доработка, история едет
+  в payload, БЕЗ force → проходит гейт чувствительных данных), «Повторить»
+  (`repeatLast`, `sendQuestion(true)`), «Без картинок» (`resendWithoutImages` —
+  условно, только если последний запрос нёс картинки; флаг
+  `STATE.lastRequestHadImages` ставится в `sendQuestion`), «Копировать ответ»
+  (сохранено). **👍/👎 НЕ реализованы** (Phase 6.3, требует продуктового решения;
+  нон-цель «телеметрия»); две кнопки про картинки сведены к одной «Без картинок»
+  (в text-first пайплайне это одна операция).
+- **Файлы:** new `src/shared/roles.ts`, `src/shared/templates.ts`,
+  `src/content/chat/slash-commands.ts`; правки `src/shared/settings.ts`
+  (`roleId`/`promptTemplates`), `src/background/llm-client.ts` (роль в промпте),
+  `src/content/state.ts` (`lastRequestHadImages`),
+  `src/content/panel/{panel.ts,panel.css,chat.ts}`, `options.html`,
+  `src/options/options.ts`, `options.css`. Тесты: `tests/shared/{roles,templates}.test.ts`,
+  `tests/content/chat/slash-commands.test.ts`, +1 в `tests/shared/settings.test.ts`,
+  +3 в `tests/background/llm-client.test.ts`.
+- **Проверка:** `npm run ci` зелёный — `tsc --noEmit` (strict) чист; `vitest run`
+  — **155/155** (131 прежних + 24 новых: roles 5 + templates 8 + slash 7 + settings 1
+  + llm-client 3); `npm run build` собирает `dist/firefox` и `dist/chrome` (MV3);
+  CDN-ссылок в `dist/` нет; `messages.ts`/`manifest.config.ts` не изменены.
+  Выполнено subagent-driven (имплементер + независимое ревью на каждую задачу).
+  Ручную проверку в Firefox+Chromium (slash-автокомплит и подстановка; смена роли →
+  тон ответа и предпросмотр payload; шаблон с переменными + экспорт/импорт;
+  кнопки под ответом, «Без картинок» после запроса с картинкой) выполняет владелец
+  (как в Phase 1–4 P0).
