@@ -15,11 +15,13 @@ export interface AskModelPayload {
   question: string;
   page: unknown;
   history?: ChatHistoryItem[];
+  images?: string[];
 }
 
 export interface BuildPayloadPayload {
   question: string;
   page: unknown;
+  images?: string[];
 }
 
 export type DiagTarget = "llm" | "vision";
@@ -33,6 +35,7 @@ export type TneRequest =
   | { type: "TNE_ASK_MODEL"; requestId: string; payload: AskModelPayload }
   | { type: "TNE_BUILD_PAYLOAD"; payload: BuildPayloadPayload }
   | { type: "TNE_DIAG_PING"; target: DiagTarget }
+  | { type: "TNE_CAPTURE_TAB" }
   | { type: "TNE_GET_DIAG" };
 
 export type TneRequestType = TneRequest["type"];
@@ -68,4 +71,10 @@ export interface GetDiagResponse {
 
 export interface OkResponse {
   ok: boolean;
+}
+
+export interface CaptureTabResponse {
+  ok: boolean;
+  dataUrl?: string;
+  error?: string;
 }
