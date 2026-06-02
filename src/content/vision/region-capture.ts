@@ -49,9 +49,14 @@ function selectRect(): Promise<Rect | null> {
   return new Promise((resolve) => {
     const overlay = document.createElement("div");
     overlay.id = OVERLAY_ID;
+    // Overlay живёт в page DOM (вне shadow root панели), поэтому стили — инлайном,
+    // а не из panel.css (он инлайнится только в shadow root).
+    overlay.style.cssText =
+      "position:fixed;inset:0;z-index:2147483646;cursor:crosshair;background:rgba(15,22,41,0.28);";
     const box = document.createElement("div");
     box.className = "tne-region-box";
-    box.style.display = "none";
+    box.style.cssText =
+      "position:fixed;border:2px solid #14b8a6;background:rgba(20,184,166,0.12);pointer-events:none;display:none;";
     overlay.appendChild(box);
     document.documentElement.appendChild(overlay);
 
