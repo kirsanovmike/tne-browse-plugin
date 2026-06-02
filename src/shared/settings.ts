@@ -24,6 +24,7 @@ export interface Settings {
   maxRetries: number;
   panelFontSize: number;
   allowExternal: boolean;
+  autoScreenshot: boolean;
   whitelist: string[];
   denylist: string[];
 }
@@ -47,6 +48,7 @@ export const DEFAULT_SETTINGS: Settings = {
   maxRetries: 1,
   panelFontSize: 12,
   allowExternal: false,
+  autoScreenshot: false,
   whitelist: ["*.tn.corp", "*.transneftenergo.ru"],
   denylist: [],
 };

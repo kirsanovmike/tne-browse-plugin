@@ -28,9 +28,13 @@ import {
   CLOSE_ICON,
   FONT_ICON,
   THEME_ICON,
+  CAMERA_ICON,
+  REGION_ICON,
+  ATTACH_ICON,
 } from "./icons";
 import { initFontControls, initThemeControl, initResizeHandle, toggleTheme } from "./controls";
 import { renderWelcomeMessage, clearChat, sendQuestion, addAssistantMessage } from "./chat";
+import { initAttachments } from "../vision/attachments";
 import { refreshContext, updatePayloadPreview } from "../context/refresh";
 import { startUrlWatcher, startDomWatcher } from "../spa-keeper";
 import { getSafeSelection } from "../context/text-extract";
@@ -219,6 +223,16 @@ function buildPanelUI(root: HTMLElement): void {
 
         <div class="tne-quick-actions" id="tne-quick-actions"></div>
 
+        <div class="tne-attach-bar">
+          <div class="tne-attachments" id="tne-attachments" hidden></div>
+          <div class="tne-attach-buttons">
+            <button class="tne-attach-button" id="tne-attach-screen" type="button" title="Снимок видимой области" aria-label="Снимок видимой области">${CAMERA_ICON}</button>
+            <button class="tne-attach-button" id="tne-attach-region" type="button" title="Снимок области рамкой" aria-label="Снимок области рамкой">${REGION_ICON}</button>
+            <button class="tne-attach-button" id="tne-attach-file" type="button" title="Загрузить изображение" aria-label="Загрузить изображение">${ATTACH_ICON}</button>
+            <input id="tne-attach-input" type="file" accept="image/png,image/jpeg,image/webp" multiple hidden />
+          </div>
+        </div>
+
         <footer class="tne-chat-footer">
           <textarea id="tne-chat-input" rows="1" placeholder="Спросите по содержимому страницы (Ctrl+Enter — отправить)"></textarea>
           <button id="tne-chat-send" class="tne-send-button" type="button" title="Отправить" aria-label="Отправить">${SEND_ICON}</button>
@@ -232,6 +246,7 @@ function buildPanelUI(root: HTMLElement): void {
   initThemeControl(root);
   initResizeHandle(root);
   buildScopeRow(root);
+  initAttachments(root);
 
   root.querySelector("#tne-chat-close")?.addEventListener("click", () => togglePanel());
   root.querySelector("#tne-theme-toggle")?.addEventListener("click", () => toggleTheme());

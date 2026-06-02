@@ -14,12 +14,14 @@ import type {
   TneRequest,
   AskModelResponse,
   BuildPayloadResponse,
+  CaptureTabResponse,
   DiagPingResponse,
   GetDiagResponse,
   OkResponse,
 } from "../shared/messages";
-import { askModel, buildBody, normalizeError, abortRequest } from "./llm-client";
+import { askModel, buildBody, normalizeError, abortRequest, redactImagesForPreview } from "./llm-client";
 import { diagSink, diagPing, getDiag } from "./diagnostics";
+import { captureActiveTab } from "./capture";
 
 function isAbort(error: unknown): boolean {
   return (
@@ -40,6 +42,7 @@ function isTneRequest(message: unknown): message is TneRequest {
 type RouteResult =
   | AskModelResponse
   | BuildPayloadResponse
+  | CaptureTabResponse
   | DiagPingResponse
   | GetDiagResponse
   | OkResponse;
@@ -65,9 +68,12 @@ export function routeMessage(message: unknown): false | Promise<RouteResult> {
       return Promise.resolve<OkResponse>({ ok: true });
 
     case "TNE_BUILD_PAYLOAD":
-      // Предпросмотр тела запроса — БЕЗ токена (токен живёт только в заголовках).
+      // Предпросмотр тела запроса — БЕЗ токена и БЕЗ гигантского base64 (плейсхолдеры).
       return readSettings().then(
-        (settings): BuildPayloadResponse => ({ ok: true, body: buildBody(message.payload, settings) })
+        (settings): BuildPayloadResponse => ({
+          ok: true,
+          body: redactImagesForPreview(buildBody(message.payload, settings)),
+        })
       );
 
     case "TNE_DIAG_PING":
@@ -75,6 +81,11 @@ export function routeMessage(message: unknown): false | Promise<RouteResult> {
         .then((settings) => diagPing(message.target, settings))
         .then((result): DiagPingResponse => ({ ok: true, ...result }))
         .catch((error): DiagPingResponse => ({ ok: false, error: normalizeError(error) }));
+
+    case "TNE_CAPTURE_TAB":
+      return captureActiveTab()
+        .then((dataUrl): CaptureTabResponse => ({ ok: true, dataUrl }))
+        .catch((error): CaptureTabResponse => ({ ok: false, error: normalizeError(error) }));
 
     case "TNE_GET_DIAG":
       return getDiag().then((diag): GetDiagResponse => ({ ok: true, ...diag }));

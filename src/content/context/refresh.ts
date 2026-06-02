@@ -9,6 +9,7 @@ import { readSettings, MAX_CONTEXT_HARD_LIMIT } from "../../shared/settings";
 import type { BuildPayloadResponse } from "../../shared/messages";
 import { buildStructuredContext, DEFAULT_MAX_CONTEXT, type PageContext } from "./build-context";
 import { addAssistantMessage } from "../panel/chat";
+import { attachmentImages } from "../vision/attachments";
 
 /** Пересобирает контекст под текущий scope, обновляет карточку и (если открыт) payload. */
 export async function refreshContext(showToast = false, reason = "manual"): Promise<PageContext | null> {
@@ -54,7 +55,7 @@ export async function updatePayloadPreview(): Promise<void> {
     const input = $("#tne-chat-input") as HTMLTextAreaElement | null;
     const response = (await browser.runtime.sendMessage({
       type: "TNE_BUILD_PAYLOAD",
-      payload: { question: input?.value?.trim() || "", page: STATE.page },
+      payload: { question: input?.value?.trim() || "", page: STATE.page, images: attachmentImages() },
     })) as BuildPayloadResponse | undefined;
     if (response?.ok) {
       pre.textContent = JSON.stringify(response.body, null, 2);

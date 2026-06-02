@@ -9,11 +9,13 @@
 import type { Settings } from "../shared/settings";
 import type { AskModelPayload } from "../shared/messages";
 import { extractContent, cleanModelAnswer } from "./response-parser";
+import { MAX_IMAGES, VISION_TIMEOUT_MS } from "../shared/limits";
 
 /** Минимальная форма payload, нужная билдерам промпта/тела. */
 export interface PromptInput {
   question?: unknown;
   page?: unknown;
+  images?: unknown;
 }
 
 export interface LlmResult {
@@ -86,6 +88,9 @@ export function buildBody(
   settings: Settings
 ): Record<string, unknown> {
   const now = new Date().toISOString();
+  const images = Array.isArray(payload.images)
+    ? payload.images.filter((s): s is string => typeof s === "string" && s.length > 0).slice(0, MAX_IMAGES)
+    : [];
   return {
     messages: [
       {
@@ -94,6 +99,7 @@ export function buildBody(
         mode: settings.mode || "llm",
         modelId: Number(settings.modelId) || 5,
         content: buildPrompt(payload),
+        files: images.length ? images : null,
         created: now,
         is_error: false,
         latencyMs: 0,
@@ -189,12 +195,16 @@ export async function askModel(
   settings: Settings,
   diag?: AskDiag
 ): Promise<LlmResult> {
-  if (!settings.endpoint) {
+  const hasImages = Array.isArray(payload.images) && payload.images.length > 0;
+  const endpoint = pickEndpoint(settings, hasImages);
+  if (!endpoint) {
     throw new Error("Не указан API endpoint в настройках расширения.");
   }
 
   const body = buildBody(payload, settings);
-  await diag?.onBody?.(body);
+  await diag?.onBody?.(redactImagesForPreview(body));
+
+  const effectiveSettings: Settings = { ...settings, requestTimeoutMs: pickTimeout(settings, hasImages) };
 
   const maxRetries = Math.max(0, Number(settings.maxRetries) || 0);
   let attempt = 0;
@@ -202,7 +212,7 @@ export async function askModel(
 
   while (attempt <= maxRetries) {
     try {
-      return await sendRequest(settings.endpoint, body, settings, requestId ?? null);
+      return await sendRequest(endpoint, body, effectiveSettings, requestId ?? null);
     } catch (error) {
       lastErr = error;
       // Не ретраим отмену пользователем и клиентские ошибки (4xx).
@@ -232,4 +242,30 @@ export function normalizeError(error: unknown): string {
 
 export function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/** Endpoint для запроса: vision (если задан) при наличии изображений, иначе основной. */
+export function pickEndpoint(settings: Settings, hasImages: boolean): string {
+  if (hasImages && settings.visionEndpoint) return settings.visionEndpoint;
+  return settings.endpoint;
+}
+
+/** Таймаут: увеличенный vision-таймаут при наличии изображений, иначе текстовый. */
+export function pickTimeout(settings: Settings, hasImages: boolean): number {
+  return hasImages ? VISION_TIMEOUT_MS : Number(settings.requestTimeoutMs) || 90000;
+}
+
+/** Возвращает КОПИЮ тела с files, заменёнными на плейсхолдеры (без гигантского base64). */
+export function redactImagesForPreview(body: unknown): unknown {
+  if (!isRecord(body) || !Array.isArray(body.messages)) return body;
+  const messages = body.messages.map((msg) => {
+    if (!isRecord(msg) || !Array.isArray(msg.files)) return msg;
+    const files = msg.files.map((file, i) => {
+      const len = typeof file === "string" ? file.length : 0;
+      const kb = Math.max(1, Math.round((len * 3) / 4 / 1024));
+      return `[изображение ${i + 1} · ~${kb} КБ]`;
+    });
+    return { ...msg, files };
+  });
+  return { ...body, messages };
 }

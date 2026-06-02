@@ -10,6 +10,8 @@ import { refreshContext } from "../context/refresh";
 import { scanSensitive } from "../security/scan";
 import { renderMarkdownInto, copyToClipboard } from "../render/markdown";
 import { SEND_ICON } from "./icons";
+import { readSettings } from "../../shared/settings";
+import { attachmentImages, clearAttachments, captureAndAttachScreen } from "../vision/attachments";
 
 interface AssistantOptions {
   light?: boolean;
@@ -32,6 +34,7 @@ export function renderWelcomeMessage(): void {
 
 export function clearChat(): void {
   STATE.history = [];
+  clearAttachments();
   renderWelcomeMessage();
   hideWarningBar();
   const input = $("#tne-chat-input") as HTMLTextAreaElement | null;
@@ -62,6 +65,13 @@ export async function sendQuestion(force = false): Promise<void> {
   }
   hideWarningBar();
 
+  // 2.5: автоскриншот — только если включён и нет ручных вложений. По умолчанию выкл.
+  const settings = await readSettings();
+  if (settings.autoScreenshot && STATE.attachments.length === 0) {
+    await captureAndAttachScreen();
+  }
+  const images = attachmentImages();
+
   input.value = "";
   input.style.height = "auto";
   addUserMessage(question);
@@ -76,7 +86,7 @@ export async function sendQuestion(force = false): Promise<void> {
     const response = (await browser.runtime.sendMessage({
       type: "TNE_ASK_MODEL",
       requestId,
-      payload: { question, page: STATE.page, history: STATE.history.slice(-6) },
+      payload: { question, page: STATE.page, history: STATE.history.slice(-6), images },
     })) as (AskModelResponse & { data?: { content?: string; latencyMs?: number } }) | undefined;
 
     removeLoader(loaderId);
@@ -93,6 +103,7 @@ export async function sendQuestion(force = false): Promise<void> {
     const answer = response.data?.content || "Пустой ответ модели.";
     STATE.history.push({ role: "user", content: question }, { role: "assistant", content: answer });
     addAssistantMessage(answer, { latencyMs: response.data?.latencyMs });
+    clearAttachments();
   } catch (error) {
     removeLoader(loaderId);
     addErrorMessage((error as Error)?.message || String(error), question);
