@@ -97,7 +97,12 @@ export function getManifest({ browser }: BuildEnv): Record<string, unknown> {
     // M4: MV3-формат WAR — массив объектов { resources, matches }.
     web_accessible_resources: [
       {
-        resources: ["icons/icon128.png", "icons/tne-browser-chat-logo.png"],
+        resources: [
+          "icons/icon128.png",
+          "icons/tne-browser-chat-logo.png",
+          // PDF.js worker — грузится в page-контексте через getURL (Phase 3).
+          "pdf.worker.min.mjs",
+        ],
         matches: ["<all_urls>"],
       },
     ],

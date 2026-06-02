@@ -37,6 +37,9 @@ export default defineConfig(({ mode }) => ({
     viteStaticCopy({
       targets: [
         { src: "icons/*", dest: "icons" },
+        // PDF.js worker: грузится через runtime.getURL("pdf.worker.min.mjs"),
+        // объявлен в web_accessible_resources. Стабильное имя без хеша → WAR-матч.
+        { src: "node_modules/pdfjs-dist/build/pdf.worker.min.mjs", dest: "." },
       ],
     }),
   ],
