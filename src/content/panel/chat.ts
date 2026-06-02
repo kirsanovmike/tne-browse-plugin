@@ -12,6 +12,7 @@ import { renderMarkdownInto, copyToClipboard } from "../render/markdown";
 import { SEND_ICON } from "./icons";
 import { readSettings } from "../../shared/settings";
 import { attachmentImages, clearAttachments, captureAndAttachScreen } from "../vision/attachments";
+import { clearPdf } from "../pdf/pdf-attachments";
 
 interface AssistantOptions {
   light?: boolean;
@@ -34,6 +35,7 @@ export function renderWelcomeMessage(): void {
 
 export function clearChat(): void {
   STATE.history = [];
+  clearPdf();
   clearAttachments();
   renderWelcomeMessage();
   hideWarningBar();
