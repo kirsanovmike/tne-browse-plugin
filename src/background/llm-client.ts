@@ -10,6 +10,7 @@ import type { Settings } from "../shared/settings";
 import type { AskModelPayload } from "../shared/messages";
 import { extractContent, cleanModelAnswer } from "./response-parser";
 import { MAX_IMAGES, VISION_TIMEOUT_MS } from "../shared/limits";
+import { resolveRolePrompt } from "../shared/roles";
 
 /** Минимальная форма payload, нужная билдерам промпта/тела. */
 export interface PromptInput {
@@ -56,15 +57,21 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
 }
 
-/** Строит русскоязычный структурный промпт из вопроса и контекста страницы. */
-export function buildPrompt(payload: PromptInput = {}): string {
+/** Строит русскоязычный структурный промпт из вопроса, контекста и (опц.) роли. */
+export function buildPrompt(payload: PromptInput = {}, rolePrompt = ""): string {
   const question = String(payload.question ?? "").trim();
   const page = isRecord(payload.page) ? payload.page : {};
   const context = String(page.text ?? "").trim();
+  const role = String(rolePrompt ?? "").trim();
 
-  return [
+  const intro = [
     "Ты — корпоративный ИИ-ассистент «ТНЭ чат». Отвечай на русском языке, кратко и по делу.",
     "Ты работаешь с содержимым текущей страницы пользователя.",
+  ];
+  if (role) intro.push(role);
+
+  return [
+    ...intro,
     "Контекст страницы передан структурированными блоками с идентификаторами: [PAGE], [SELECTED], [DOCUMENT Dn], [MODAL Mn], [FORM Fn], [TABLE Tn], [MAIN CONTENT].",
     "Используй только переданный контекст страницы и сам вопрос. Не выдумывай факты, которых нет в контексте.",
     "Если отвечаешь по данным конкретного блока, указывай блок-источник в квадратных скобках, например [FORM F1], [TABLE T1] или [MODAL M1].",
@@ -98,7 +105,7 @@ export function buildBody(
         role: 1,
         mode: settings.mode || "llm",
         modelId: Number(settings.modelId) || 5,
-        content: buildPrompt(payload),
+        content: buildPrompt(payload, resolveRolePrompt(settings.roleId)),
         files: images.length ? images : null,
         created: now,
         is_error: false,

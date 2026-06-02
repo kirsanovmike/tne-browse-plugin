@@ -147,3 +147,24 @@ describe("redactImagesForPreview", () => {
     expect(redactImagesForPreview(body)).toEqual(body);
   });
 });
+
+describe("role injection", () => {
+  it("buildPrompt injects a non-empty role prompt", () => {
+    const prompt = buildPrompt({ question: "q", page: { text: "ctx" } }, "РОЛЬ-ТЕКСТ");
+    expect(prompt).toContain("РОЛЬ-ТЕКСТ");
+  });
+
+  it("buildPrompt without a role is unchanged", () => {
+    const withEmpty = buildPrompt({ question: "q", page: { text: "ctx" } }, "");
+    const noArg = buildPrompt({ question: "q", page: { text: "ctx" } });
+    expect(withEmpty).toBe(noArg);
+  });
+
+  it("buildBody resolves the role from settings.roleId", () => {
+    const body = buildBody(
+      { question: "q", page: { text: "ctx" } },
+      { ...DEFAULT_SETTINGS, roleId: "analyst" }
+    ) as { messages: Array<{ content: string }> };
+    expect(body.messages[0]!.content).toContain("аналит");
+  });
+});

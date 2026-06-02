@@ -13,6 +13,7 @@ import { SEND_ICON } from "./icons";
 import { readSettings } from "../../shared/settings";
 import { attachmentImages, clearAttachments, captureAndAttachScreen } from "../vision/attachments";
 import { clearPdf } from "../pdf/pdf-attachments";
+import { resolveSlashCommand } from "../chat/slash-commands";
 
 interface AssistantOptions {
   light?: boolean;
@@ -52,7 +53,10 @@ export async function sendQuestion(force = false): Promise<void> {
 
   const input = $("#tne-chat-input") as HTMLTextAreaElement | null;
   if (!input) return;
-  const question = input.value.trim();
+  // 4.5: развернуть slash-команду, набранную и отправленную минуя автокомплит
+  // (включая аргумент, например «/translate en»); иначе — обычный текст.
+  const resolved = resolveSlashCommand(input.value);
+  const question = resolved ? resolved.prompt : input.value.trim();
   if (!question) return;
 
   if (STATE.contextDirty || !STATE.page) await refreshContext(false, "before-send");
@@ -73,6 +77,7 @@ export async function sendQuestion(force = false): Promise<void> {
     await captureAndAttachScreen();
   }
   const images = attachmentImages();
+  STATE.lastRequestHadImages = images.length > 0;
 
   input.value = "";
   input.style.height = "auto";
@@ -113,6 +118,33 @@ export async function sendQuestion(force = false): Promise<void> {
     STATE.currentRequestId = null;
     setSending(false);
   }
+}
+
+/** Отправляет преднастроенную доработку предыдущего ответа (история едет в payload). */
+export function sendFollowUp(instruction: string): void {
+  if (STATE.isSending) return;
+  const input = $("#tne-chat-input") as HTMLTextAreaElement | null;
+  if (!input) return;
+  input.value = instruction;
+  input.style.height = "auto";
+  void sendQuestion();
+}
+
+/** Повторяет последний вопрос (без повторного гейта — он уже проверен). */
+function repeatLast(): void {
+  if (STATE.isSending || !STATE.lastQuestion) return;
+  const input = $("#tne-chat-input") as HTMLTextAreaElement | null;
+  if (input) input.value = STATE.lastQuestion;
+  void sendQuestion(true);
+}
+
+/** Повторяет последний вопрос со снятыми вложениями («без картинок»). */
+function resendWithoutImages(): void {
+  if (STATE.isSending || !STATE.lastQuestion) return;
+  clearAttachments();
+  const input = $("#tne-chat-input") as HTMLTextAreaElement | null;
+  if (input) input.value = STATE.lastQuestion;
+  void sendQuestion(true);
 }
 
 function showWarningBar(findings: string[], question: string): void {
@@ -180,6 +212,30 @@ export function addAssistantMessage(text: string, options: AssistantOptions = {}
   if (!options.light) {
     const actions = document.createElement("div");
     actions.className = "tne-message-actions";
+
+    const mkBtn = (label: string, onClick: () => void): HTMLButtonElement => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.textContent = label;
+      b.addEventListener("click", onClick);
+      return b;
+    };
+
+    actions.append(
+      mkBtn("Продолжить", () =>
+        sendFollowUp("Продолжи предыдущий ответ с того места, где остановился.")
+      ),
+      mkBtn("Короче", () => sendFollowUp("Сделай предыдущий ответ короче, оставь только суть.")),
+      mkBtn("Подробнее", () =>
+        sendFollowUp("Раскрой предыдущий ответ подробнее, добавь деталей и пояснений.")
+      ),
+      mkBtn("Повторить", () => repeatLast())
+    );
+
+    if (STATE.lastRequestHadImages) {
+      actions.append(mkBtn("Без картинок", () => resendWithoutImages()));
+    }
+
     const copy = document.createElement("button");
     copy.type = "button";
     copy.textContent = "Копировать ответ";

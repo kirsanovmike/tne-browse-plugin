@@ -17,7 +17,8 @@ import {
   $,
   type ScopeId,
 } from "../state";
-import { readSettings } from "../../shared/settings";
+import { readSettings, writeSettings } from "../../shared/settings";
+import { ROLE_PRESETS, DEFAULT_ROLE_ID } from "../../shared/roles";
 import { isHostAllowed } from "../../shared/whitelist";
 import { escapeHtml } from "../../shared/text";
 import {
@@ -41,6 +42,12 @@ import { refreshContext, updatePayloadPreview } from "../context/refresh";
 import { startUrlWatcher, startDomWatcher } from "../spa-keeper";
 import { getSafeSelection } from "../context/text-extract";
 import { highlightBlock } from "../render/source-highlight";
+import {
+  resolveSlashCommand,
+  matchSlashCommands,
+  type SlashCommand,
+} from "../chat/slash-commands";
+import { applyTemplateVariables, firstTableBlock } from "../../shared/templates";
 
 async function computeAllowed(): Promise<boolean> {
   const settings = await readSettings();
@@ -176,6 +183,82 @@ function renderBlockedPanel(): void {
   root.querySelector("#tne-blocked-settings")?.addEventListener("click", () => browser.runtime.sendMessage({ type: "TNE_OPEN_OPTIONS" }));
 }
 
+interface SlashMenuController {
+  isOpen(): boolean;
+  update(): void;
+  move(dir: number): void;
+  confirm(): void;
+  close(): void;
+}
+
+function createSlashMenu(root: HTMLElement, input: HTMLTextAreaElement): SlashMenuController {
+  const menu = root.querySelector("#tne-slash-menu") as HTMLElement;
+  let matches: SlashCommand[] = [];
+  let active = 0;
+
+  function render(): void {
+    menu.innerHTML = "";
+    matches.forEach((cmd, i) => {
+      const item = document.createElement("div");
+      item.className = "tne-slash-item" + (i === active ? " tne-slash-item--active" : "");
+      item.setAttribute("role", "option");
+      const name = document.createElement("span");
+      name.className = "tne-slash-name";
+      name.textContent = cmd.name;
+      const hint = document.createElement("span");
+      hint.className = "tne-slash-hint";
+      hint.textContent = cmd.hint;
+      item.append(name, hint);
+      item.addEventListener("mousedown", (event) => {
+        event.preventDefault();
+        active = i;
+        confirm();
+      });
+      menu.appendChild(item);
+    });
+    menu.hidden = matches.length === 0;
+  }
+
+  function update(): void {
+    matches = matchSlashCommands(input.value);
+    if (active >= matches.length) active = 0;
+    render();
+  }
+
+  function move(dir: number): void {
+    if (!matches.length) return;
+    active = (active + dir + matches.length) % matches.length;
+    render();
+  }
+
+  function confirm(): void {
+    const cmd = matches[active];
+    if (cmd) {
+      const resolved = resolveSlashCommand(cmd.name);
+      if (resolved) {
+        input.value = resolved.prompt;
+        input.style.height = "auto";
+        input.style.height = `${Math.min(input.scrollHeight, 120)}px`;
+      }
+    }
+    close();
+    input.focus();
+  }
+
+  function close(): void {
+    matches = [];
+    menu.hidden = true;
+  }
+
+  return {
+    isOpen: () => !menu.hidden && matches.length > 0,
+    update,
+    move,
+    confirm,
+    close,
+  };
+}
+
 function buildPanelUI(root: HTMLElement): void {
   root.innerHTML = `
       <section class="tne-chat-panel" aria-label="ТНЭ чат по странице">
@@ -188,6 +271,7 @@ function buildPanelUI(root: HTMLElement): void {
             </div>
           </div>
           <div class="tne-chat-header-actions">
+            <select class="tne-role-select" id="tne-role-select" title="Роль ассистента" aria-label="Роль ассистента"></select>
             <div class="tne-font-menu-wrap" id="tne-font-menu-wrap">
               <button class="tne-icon-button" id="tne-font-trigger" title="Размер текста" type="button" aria-label="Размер текста">${FONT_ICON}</button>
               <div class="tne-font-menu" id="tne-font-menu" aria-label="Размер текста">
@@ -234,6 +318,7 @@ function buildPanelUI(root: HTMLElement): void {
         <main class="tne-chat-messages elegant-scroll" id="tne-chat-messages"></main>
 
         <div class="tne-quick-actions" id="tne-quick-actions"></div>
+        <div class="tne-template-actions" id="tne-template-actions" hidden></div>
 
         <div class="tne-attach-bar">
           <div class="tne-pdf-bar" id="tne-pdf-bar" hidden></div>
@@ -248,6 +333,8 @@ function buildPanelUI(root: HTMLElement): void {
           </div>
         </div>
 
+        <div class="tne-slash-menu" id="tne-slash-menu" role="listbox" hidden></div>
+
         <footer class="tne-chat-footer">
           <textarea id="tne-chat-input" rows="1" placeholder="Спросите по содержимому страницы (Ctrl+Enter — отправить)"></textarea>
           <button id="tne-chat-send" class="tne-send-button" type="button" title="Отправить" aria-label="Отправить">${SEND_ICON}</button>
@@ -261,6 +348,7 @@ function buildPanelUI(root: HTMLElement): void {
   initThemeControl(root);
   initResizeHandle(root);
   buildScopeRow(root);
+  void initRoleSelect(root);
   initAttachments(root);
   initPdf(root);
 
@@ -277,7 +365,32 @@ function buildPanelUI(root: HTMLElement): void {
   });
 
   const input = root.querySelector("#tne-chat-input") as HTMLTextAreaElement;
+  const slash = createSlashMenu(root, input);
+
   input.addEventListener("keydown", (event) => {
+    if (slash.isOpen()) {
+      if (event.key === "ArrowDown") {
+        event.preventDefault();
+        slash.move(1);
+        return;
+      }
+      if (event.key === "ArrowUp") {
+        event.preventDefault();
+        slash.move(-1);
+        return;
+      }
+      if (event.key === "Enter" || event.key === "Tab") {
+        event.preventDefault();
+        slash.confirm();
+        return;
+      }
+      if (event.key === "Escape") {
+        event.preventDefault();
+        event.stopPropagation();
+        slash.close();
+        return;
+      }
+    }
     if (event.key === "Enter" && (event.ctrlKey || event.metaKey)) {
       event.preventDefault();
       sendQuestion();
@@ -303,6 +416,7 @@ function buildPanelUI(root: HTMLElement): void {
   input.addEventListener("input", () => {
     input.style.height = "auto";
     input.style.height = `${Math.min(input.scrollHeight, 120)}px`;
+    slash.update();
   });
 
   const quick = root.querySelector("#tne-quick-actions");
@@ -316,6 +430,8 @@ function buildPanelUI(root: HTMLElement): void {
     });
     quick?.appendChild(button);
   });
+
+  void initTemplateButtons(root);
 
   renderWelcomeMessage();
 
@@ -333,6 +449,58 @@ function buildPanelUI(root: HTMLElement): void {
     if (!id) return;
     keyEvent.preventDefault();
     highlightBlock(id);
+  });
+}
+
+async function initTemplateButtons(root: HTMLElement): Promise<void> {
+  const row = root.querySelector("#tne-template-actions") as HTMLElement | null;
+  const input = root.querySelector("#tne-chat-input") as HTMLTextAreaElement | null;
+  if (!row || !input) return;
+
+  const settings = await readSettings();
+  const templates = settings.promptTemplates || [];
+  row.innerHTML = "";
+  if (!templates.length) {
+    row.hidden = true;
+    return;
+  }
+
+  for (const tpl of templates) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.textContent = tpl.label || "Без названия";
+    button.title = "Шаблон промпта";
+    button.addEventListener("click", async () => {
+      if (STATE.contextDirty || !STATE.page) await refreshContext(false, "template");
+      const vars = {
+        selection: STATE.page?.selection || getSafeSelection() || "",
+        url: location.href,
+        table: firstTableBlock(STATE.page?.text || ""),
+      };
+      input.value = applyTemplateVariables(tpl.body, vars);
+      input.style.height = "auto";
+      input.style.height = `${Math.min(input.scrollHeight, 120)}px`;
+      input.focus();
+    });
+    row.appendChild(button);
+  }
+  row.hidden = false;
+}
+
+async function initRoleSelect(root: HTMLElement): Promise<void> {
+  const select = root.querySelector("#tne-role-select") as HTMLSelectElement | null;
+  if (!select) return;
+  select.innerHTML = "";
+  for (const role of ROLE_PRESETS) {
+    const opt = document.createElement("option");
+    opt.value = role.id;
+    opt.textContent = role.label;
+    select.appendChild(opt);
+  }
+  const settings = await readSettings();
+  select.value = settings.roleId || DEFAULT_ROLE_ID;
+  select.addEventListener("change", () => {
+    void writeSettings({ roleId: select.value });
   });
 }
 

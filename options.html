@@ -109,6 +109,20 @@
       <div id="access-status" class="status"></div>
     </form>
 
+    <section class="card" id="templates-card">
+      <h2 class="card-title">Библиотека промптов</h2>
+      <div id="templates-list"></div>
+      <div class="diag-buttons">
+        <button type="button" id="tpl-add">Добавить шаблон</button>
+        <button type="button" id="tpl-save">Сохранить шаблоны</button>
+        <button type="button" id="tpl-export">Экспорт</button>
+        <button type="button" id="tpl-import-btn">Импорт</button>
+        <input type="file" id="tpl-import" accept="application/json" hidden />
+      </div>
+      <p class="tpl-hint">Доступные переменные: <code>{{выделение}}</code>, <code>{{url}}</code>, <code>{{таблица}}</code>. Кнопки шаблонов появятся в панели чата.</p>
+      <div id="tpl-status" class="status"></div>
+    </section>
+
     <section class="card">
       <h2 class="card-title">Диагностика</h2>
       <div class="diag-buttons">
