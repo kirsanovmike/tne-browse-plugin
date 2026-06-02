@@ -173,7 +173,7 @@ export function addAssistantMessage(text: string, options: AssistantOptions = {}
 
   const body = document.createElement("div");
   body.className = "tne-message-content";
-  renderMarkdownInto(body, text);
+  renderMarkdownInto(body, text, { linkSources: true });
 
   node.append(meta, body);
 

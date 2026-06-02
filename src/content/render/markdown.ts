@@ -9,9 +9,14 @@
 import { marked } from "marked";
 import hljs from "highlight.js";
 import { escapeHtml } from "../../shared/text";
+import { linkifySources } from "./source-links";
 
 /** Парсит Markdown, санитайзит, вставляет в target, подсвечивает код. */
-export function renderMarkdownInto(target: HTMLElement, text: string): void {
+export function renderMarkdownInto(
+  target: HTMLElement,
+  text: string,
+  opts: { linkSources?: boolean } = {}
+): void {
   const raw = String(text || "");
   let html: string;
   try {
@@ -37,6 +42,8 @@ export function renderMarkdownInto(target: HTMLElement, text: string): void {
     a.setAttribute("target", "_blank");
     a.setAttribute("rel", "noopener noreferrer");
   });
+
+  if (opts.linkSources) linkifySources(target);
 }
 
 function attachCodeCopyButton(codeBlock: HTMLElement): void {
