@@ -13,6 +13,7 @@ import { SEND_ICON } from "./icons";
 import { readSettings } from "../../shared/settings";
 import { attachmentImages, clearAttachments, captureAndAttachScreen } from "../vision/attachments";
 import { clearPdf } from "../pdf/pdf-attachments";
+import { resolveSlashCommand } from "../chat/slash-commands";
 
 interface AssistantOptions {
   light?: boolean;
@@ -52,7 +53,10 @@ export async function sendQuestion(force = false): Promise<void> {
 
   const input = $("#tne-chat-input") as HTMLTextAreaElement | null;
   if (!input) return;
-  const question = input.value.trim();
+  // 4.5: развернуть slash-команду, набранную и отправленную минуя автокомплит
+  // (включая аргумент, например «/translate en»); иначе — обычный текст.
+  const resolved = resolveSlashCommand(input.value);
+  const question = resolved ? resolved.prompt : input.value.trim();
   if (!question) return;
 
   if (STATE.contextDirty || !STATE.page) await refreshContext(false, "before-send");
