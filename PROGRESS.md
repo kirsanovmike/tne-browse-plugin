@@ -454,3 +454,53 @@
   CDN-ссылок в `dist/` нет. Ручную проверку в Firefox+Chromium (текстовый PDF,
   скан, выбор страниц «1-3,12», большой PDF с прогрессом, автодетект, очистка)
   выполняет владелец (как в Phase 1/2).
+
+## PHASE 4 — Продуктовый UX (P0 4.1–4.4)
+
+Дизайн: `docs/superpowers/specs/2026-06-02-phase4-ux-p0-design.md`; план:
+`docs/superpowers/plans/2026-06-02-phase4-ux-p0.md`. Выполнено subagent-driven на
+ветке `phase4-ux`. Все P0 (4.1–4.4).
+
+- **[4.1] Кликабельные метки-источники** — `src/content/render/source-links.ts`
+  (`findSourceLabels` — чистая, покрыта Vitest; `linkifySources` — DOM-обход с
+  пропуском `pre`/`code`). `renderMarkdownInto(..., { linkSources: true })`
+  вызывается из `addAssistantMessage`. Распознаются `[FORM Fn] [TABLE Tn]
+  [MODAL Mn] [DOCUMENT Dn]` и `[SELECTED] [PAGE] [MAIN CONTENT]`. Системный промпт
+  (`background/llm-client.ts`) уже требовал метки-источники с Phase 1 — менять не
+  потребовалось.
+- **[4.2] Подсветка источника** — `src/content/render/source-highlight.ts`:
+  `highlightBlock` (scrollIntoView + overlay-бокс в page DOM, учёт same-origin
+  iframe через `viewportRect`); если блок не в `STATE.blockMap` (PDF
+  `[DOCUMENT D1]`, `[SELECTED]`/`[PAGE]`/`[MAIN CONTENT]` или устаревший маппинг)
+  → `showPanelToast`. Делегат кликов/Enter — на `#tne-chat-messages`. Стили
+  `.tne-source-link`/`.tne-toast` — в `panel.css`.
+- **[4.3] Быстрые действия** — 6 пресетов (`QuickAction{label,prompt}`) в
+  `state.ts` (`QUICK_ACTIONS`); рендер в `panel.ts` подставляет `prompt` и
+  отправляет (было 2 строки).
+- **[4.4] Выделение → действие** — плавающая кнопка
+  (`src/content/selection/floating-button.ts`, собственный shadow root,
+  whitelist-gated, мини-меню из `SELECTION_ACTION_META`, инициализация в
+  `content/index.ts`) + контекстное меню (`background/index.ts`, право
+  `contextMenus`, пункты из shared-meta → `TNE_SELECTION_ACTION` → content
+  `runSelectionAction`). Общая машинерия — `askWithSelectionPrompt` (рефактор
+  `askBySelection`). Промпты — в `src/content/selection/actions.ts`
+  (`selectionPromptFor` покрыта Vitest); meta (id+label) — в
+  `src/shared/selection-actions.ts`. Контекст = только выделение (scope
+  `selection`, через гейт `scanSensitive`).
+- **Файлы:** new `src/content/render/{source-links,source-highlight}.ts`,
+  `src/shared/selection-actions.ts`, `src/content/selection/{actions,
+  floating-button}.ts`; правки `src/content/state.ts`,
+  `src/content/panel/{panel.ts,panel.css,chat.ts}`,
+  `src/content/render/markdown.ts`, `src/content/index.ts`,
+  `src/shared/messages.ts`, `src/background/index.ts`, `manifest.config.ts`.
+  Тесты: `tests/content/render/source-links.test.ts`,
+  `tests/content/selection/actions.test.ts` (+9); `tests/setup.ts` дополнен
+  stub-ами `location` и `runtime.getURL` (импорт-граф panel.ts в node).
+- **Проверка:** `npm run ci` зелёный — `tsc --noEmit` (strict) чист; `vitest run`
+  — **131/131** (122 прежних + 9 новых: 6 source-links + 3 actions);
+  `npm run build` собирает `dist/firefox` и `dist/chrome` (MV3) с правом
+  `contextMenus` в обоих манифестах; CDN-ссылок в `dist/` нет. Ручную проверку в
+  Firefox+Chromium (метка→подсветка form/table/modal, тост для PDF
+  `[DOCUMENT D1]`, 6 быстрых кнопок, плавающая кнопка/контекстное меню на
+  выделении, неактивность кнопки вне whitelist) выполняет владелец (как в Phase
+  1–3).
