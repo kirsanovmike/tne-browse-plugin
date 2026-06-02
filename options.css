@@ -219,3 +219,28 @@ label span code {
   white-space: pre-wrap;
   word-break: break-word;
 }
+
+.tpl-item {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+  align-items: start;
+  margin-bottom: 12px;
+}
+.tpl-item input[type="text"] {
+  grid-column: 1 / 2;
+}
+.tpl-item textarea {
+  grid-column: 1 / 2;
+  width: 100%;
+  font: inherit;
+}
+.tpl-item button {
+  grid-column: 2 / 3;
+  grid-row: 1 / 3;
+  align-self: start;
+}
+.tpl-hint {
+  font-size: 13px;
+  opacity: 0.75;
+}
