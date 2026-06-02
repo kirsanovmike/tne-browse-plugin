@@ -45,3 +45,20 @@ export const THEME_ICON = `
       <circle cx="12" cy="12" r="4" fill="currentColor"/>
       <path d="M12 2.5v2.4M12 19.1v2.4M4.3 4.3l1.7 1.7M18 18l1.7 1.7M2.5 12h2.4M19.1 12h2.4M4.3 19.7 6 18M18 6l1.7-1.7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
     </svg>`;
+
+export const CAMERA_ICON = `
+    <svg class="tne-action-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <path d="M4 8h3l1.5-2h7L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+      <circle cx="12" cy="13" r="3.1" fill="none" stroke="currentColor" stroke-width="1.6"/>
+    </svg>`;
+
+export const REGION_ICON = `
+    <svg class="tne-action-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <path d="M4 8V5h3M20 8V5h-3M4 16v3h3M20 16v3h-3" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+      <rect x="9" y="9" width="6" height="6" rx="1" fill="none" stroke="currentColor" stroke-width="1.4" opacity="0.7"/>
+    </svg>`;
+
+export const ATTACH_ICON = `
+    <svg class="tne-action-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <path d="M19 11.5 12 18.5a4 4 0 0 1-5.7-5.7l7-7a2.6 2.6 0 0 1 3.7 3.7l-7 7a1.2 1.2 0 0 1-1.7-1.7l6.3-6.3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>`;
