@@ -263,8 +263,12 @@
 - **Формат ответа модели.** Парсер `extractContent` поддерживает несколько форм
   (`content` / `response` / `messages[].content` с `role: 2`). Подтвердить enum
   `AuthorRole` и фактическую форму ответа на проде.
-- **Vision endpoint.** Поле `visionEndpoint` добавлено в настройки и диагностику, но
-  сам vision-флоу — это Phase 2 (в этом заходе не реализован).
+- **Vision endpoint.** Поле `visionEndpoint` теперь используется (Phase 2): запрос с
+  изображениями уходит на `visionEndpoint`, если он задан, иначе на основной `endpoint`.
+- **Vision `modelId`/`mode`.** Неизвестно, нужны ли для запроса с изображениями
+  другие `modelId`/`mode`, чем для текста. Пока шлём те же (тело с `files` по
+  `api doc.md` работает на основном endpoint). Уточнить у владельца, если
+  vision-ответы окажутся пустыми/некорректными.
 
 ## Лог по задачам
 
@@ -320,6 +324,62 @@
   ширины (ключ `panelWidth`, dbl-click — сброс), сохранение между сессиями.
   Размер шрифта (`panelFontSize`) был реализован ранее. `manifest.json`,
   `background.js`, `content.js`, `panel.css`.
+
+## PHASE 2 — Vision (2.1–2.5)
+
+Дизайн: `docs/superpowers/specs/2026-06-02-phase2-vision-p0-design.md`; план:
+`docs/superpowers/plans/2026-06-02-phase2-vision.md`. Выполнено субагентами
+(subagent-driven), ветка `phase2-vision`. Весь Phase 2 (P0 2.1–2.3 + P1 2.4–2.5).
+
+**Ключевой вывод (из `docs/api doc.md`):** изображения — не отдельный API, а поле
+`messages[0].files` (чистый base64, без префикса `data:...`) в том же запросе.
+Поэтому Phase 2 = «приложить картинки к существующему потоку `TNE_ASK_MODEL`», без
+отдельного vision-флоу.
+
+- **Единый конфиг лимитов** — `src/shared/limits.ts` (§3 плана): `MAX_IMAGES=5`,
+  `IMAGE_MAX_SIDE=1600`, `IMAGE_QUALITY=0.8`, `VISION_TIMEOUT_MS=120000`,
+  `CAPTURE_MIN_INTERVAL_MS=500` (≤2 захвата/сек). Покрыт смоук-тестом.
+- **Сжатие — в content, не в фоне.** Chromium MV3 background — service worker (нет
+  DOM/canvas). `captureVisibleTab` (привилегированная часть) — в `src/background/
+  capture.ts` с троттлингом ≥500 мс; сжатие/кроп/декод файла — в content
+  (`src/content/vision/image-compressor.ts`, detached canvas).
+- **[2.1] Снимок видимой области** — кнопка 📷 → content прячет хост
+  `#tne-page-chat-host` (`visibility:hidden`) → `TNE_CAPTURE_TAB` → background
+  `captureActiveTab` → data URL → восстановление хоста (в `finally`) → сжатие →
+  вложение. `attachments.ts:captureAndAttachScreen`.
+- **[2.2] До 5 изображений + сжатие** — лента накапливает до `MAX_IMAGES`; лимит
+  enforced в `addAttachment`/`attachFromFiles` и защитно в `buildBody`
+  (`.slice(0, MAX_IMAGES)`). Сжатие jpeg q0.8, ресайз ≤1600px по большей стороне.
+- **[2.3] Ручная загрузка** — `<input type=file accept=image/png,jpeg,webp multiple>`
+  → `fileToDataUrl` → `compressDataUrl` → вложение; не-изображения отклоняются.
+- **[2.4] Скриншот области рамкой** — `src/content/vision/region-capture.ts`:
+  полноэкранный overlay в page DOM (инлайн-стили — он вне shadow root!), drag →
+  rect; на mouseup overlay убирается → снимок вкладки → кроп к области
+  (`scale = image.naturalWidth / window.innerWidth`, самокоррекция под
+  devicePixelRatio). Esc / рамка <6px — отмена.
+- **[2.5] Опциональный автоскриншот** — настройка `autoScreenshot` (дефолт **false**),
+  чекбокс в `options.html`/`options.ts`. В `chat.ts:sendQuestion` срабатывает только
+  если включён И нет ручных вложений, и только после прохождения warning-gate
+  чувствительных данных.
+- **Маршрутизация/таймаут** — `pickEndpoint(settings, hasImages)` (vision если задан,
+  иначе основной), `pickTimeout` (120с для запросов с картинками). Юнит-тесты.
+- **Приватность** — токен только в заголовках (тест «не утекает с картинками»);
+  base64 редактируется в плейсхолдеры `[изображение N · ~K КБ]` ПЕРЕД сохранением в
+  диагностику (`diag.onBody → storage.session`) и в предпросмотр payload
+  (`redactImagesForPreview`, возвращает копию — оригинал не мутируется). CDN не
+  добавлены (проверено `grep` по `dist/`).
+- **Файлы:** new `src/shared/limits.ts`, `src/background/capture.ts`,
+  `src/content/vision/{image-compressor,attachments,region-capture}.ts`; правки
+  `messages.ts`, `settings.ts`, `llm-client.ts`, `messaging.ts`, `state.ts`,
+  `panel/{icons,panel}.ts`, `panel.css`, `chat.ts`, `context/refresh.ts`,
+  `options.html`, `options/options.ts`. Тесты: `limits.test.ts`,
+  `content/vision/image-compressor.test.ts`, +10 в `background/llm-client.test.ts`.
+- **Проверка:** `npm run ci` зелёный — `tsc --noEmit` (strict) чист; `vitest run` —
+  **106/106** (88 прежних + 18 новых: 1 limits + 8 image-compressor + ... всего +18);
+  `npm run build` собирает `dist/firefox` и `dist/chrome` (MV3). Финальное
+  код-ревью — APPROVED (без Critical/Important). Ручную проверку в Firefox+Chromium
+  (захват/область/загрузка/автоскриншот/самоскрытие панели) выполняет владелец
+  (как в Phase 1).
 
 ### Решения по объёму P1
 
