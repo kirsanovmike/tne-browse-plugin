@@ -40,6 +40,7 @@ import { initPdf, setDetectedTabPdf } from "../pdf/pdf-attachments";
 import { refreshContext, updatePayloadPreview } from "../context/refresh";
 import { startUrlWatcher, startDomWatcher } from "../spa-keeper";
 import { getSafeSelection } from "../context/text-extract";
+import { highlightBlock } from "../render/source-highlight";
 
 async function computeAllowed(): Promise<boolean> {
   const settings = await readSettings();
@@ -311,6 +312,22 @@ function buildPanelUI(root: HTMLElement): void {
   });
 
   renderWelcomeMessage();
+
+  const messagesEl = root.querySelector("#tne-chat-messages");
+  messagesEl?.addEventListener("click", (event) => {
+    const link = (event.target as HTMLElement | null)?.closest?.(".tne-source-link") as HTMLElement | null;
+    const id = link?.dataset.blockId;
+    if (id) highlightBlock(id);
+  });
+  messagesEl?.addEventListener("keydown", (event) => {
+    const keyEvent = event as KeyboardEvent;
+    if (keyEvent.key !== "Enter" && keyEvent.key !== " ") return;
+    const link = (keyEvent.target as HTMLElement | null)?.closest?.(".tne-source-link") as HTMLElement | null;
+    const id = link?.dataset.blockId;
+    if (!id) return;
+    keyEvent.preventDefault();
+    highlightBlock(id);
+  });
 }
 
 function buildScopeRow(root: HTMLElement): void {
