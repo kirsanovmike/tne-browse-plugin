@@ -75,8 +75,9 @@ export async function togglePanel(): Promise<void> {
   }
 }
 
-// Хоткей «спросить по выделению»: открыть панель, режим «Выделение», задать вопрос.
-export async function askBySelection(): Promise<void> {
+// Открыть панель в режиме «Выделение» и задать вопрос с переданным промптом.
+// Базис для хоткея «спросить по выделению» и действий по выделению (4.4).
+export async function askWithSelectionPrompt(prompt: string): Promise<void> {
   ensureHost();
   STATE.allowed = await computeAllowed();
 
@@ -105,8 +106,13 @@ export async function askBySelection(): Promise<void> {
     return;
   }
 
-  if (input && !input.value.trim()) input.value = "Объясни выделенный фрагмент";
+  if (input && !input.value.trim()) input.value = prompt;
   sendQuestion();
+}
+
+// Хоткей «спросить по выделению» (1.15) — действие по умолчанию «объяснить».
+export async function askBySelection(): Promise<void> {
+  return askWithSelectionPrompt("Объясни выделенный фрагмент");
 }
 
 function ensureHost(): HTMLElement {
