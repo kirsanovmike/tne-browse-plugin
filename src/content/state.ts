@@ -96,6 +96,7 @@ export interface ContentState {
   isSending: boolean;
   currentRequestId: string | null;
   lastQuestion: string;
+  lastRequestHadImages: boolean;
   lastUrl: string;
   urlWatchStarted: boolean;
   domWatchStarted: boolean;
@@ -123,6 +124,7 @@ export const STATE: ContentState = {
   isSending: false,
   currentRequestId: null,
   lastQuestion: "",
+  lastRequestHadImages: false,
   lastUrl: location.href,
   urlWatchStarted: false,
   domWatchStarted: false,
