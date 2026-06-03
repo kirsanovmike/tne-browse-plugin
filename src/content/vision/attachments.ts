@@ -10,6 +10,7 @@ import type { CaptureTabResponse } from "../../shared/messages";
 import { compressDataUrl, fileToDataUrl } from "./image-compressor";
 import { captureRegion } from "./region-capture";
 import { addAssistantMessage } from "../panel/chat";
+import { openImageLightbox } from "../panel/lightbox";
 import { loadPdfFromFile } from "../pdf/pdf-attachments";
 
 const TNE_HOST_ID = "tne-page-chat-host";
@@ -126,9 +127,10 @@ export function renderAttachments(): void {
     chip.className = "tne-attachment";
     const kb = Math.max(1, Math.round(att.bytes / 1024));
     chip.innerHTML = `
-      <img class="tne-attachment-thumb" src="${att.dataUrl}" alt="вложение" />
+      <img class="tne-attachment-thumb" src="${att.dataUrl}" alt="вложение" title="Открыть на весь экран" />
       <span class="tne-attachment-size">${kb} КБ</span>
       <button class="tne-attachment-remove" type="button" title="Убрать" aria-label="Убрать вложение">×</button>`;
+    chip.querySelector(".tne-attachment-thumb")?.addEventListener("click", () => openImageLightbox(att.dataUrl)); // 5.R3-5
     chip.querySelector(".tne-attachment-remove")?.addEventListener("click", () => removeAttachment(att.id));
     bar.appendChild(chip);
   }

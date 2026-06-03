@@ -10,6 +10,7 @@ import { refreshContext } from "../context/refresh";
 import { scanSensitive } from "../security/scan";
 import { renderMarkdownInto, copyToClipboard } from "../render/markdown";
 import { SEND_ICON } from "./icons";
+import { openImageLightbox } from "./lightbox";
 import { readSettings } from "../../shared/settings";
 import { attachmentImages, clearAttachments, captureAndAttachScreen } from "../vision/attachments";
 import { clearPdf } from "../pdf/pdf-attachments";
@@ -212,6 +213,8 @@ function addUserMessage(text: string, media: UserMessageMedia = {}): void {
       img.className = "tne-bubble-thumb";
       img.src = dataUrl;
       img.alt = "отправленное изображение";
+      img.title = "Открыть на весь экран";
+      img.addEventListener("click", () => openImageLightbox(dataUrl)); // 5.R3-5
       tray.appendChild(img);
     }
 
