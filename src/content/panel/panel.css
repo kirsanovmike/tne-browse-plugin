@@ -377,11 +377,12 @@
   white-space: pre-wrap;
 }
 
-/* HF2 — вложения, реально ушедшие с вопросом, показываем в пузыре сообщения. */
+/* HF2 — вложения, реально ушедшие с вопросом, показываем в пузыре сообщения.
+   5.R2-7 — лента вложений идёт НАД текстом, прижимаясь к нему снизу. */
 .tne-bubble-attachments {
   align-self: flex-end;
   max-width: 86%;
-  margin-top: -2px;
+  margin-bottom: -2px;
   display: flex;
   flex-wrap: wrap;
   justify-content: flex-end;

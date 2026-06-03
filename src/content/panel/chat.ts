@@ -186,13 +186,7 @@ function addUserMessage(text: string, media: UserMessageMedia = {}): void {
   const messages = $("#tne-chat-messages");
   if (!messages) return;
 
-  if (text) {
-    const node = document.createElement("div");
-    node.className = "tne-user-bubble";
-    node.textContent = text;
-    messages.appendChild(node);
-  }
-
+  // 5.R2-7: вложения рисуем НАД текстом — сначала картинки/чип документа, потом вопрос.
   const images = media.images ?? [];
   if (images.length || media.docName) {
     const tray = document.createElement("div");
@@ -220,6 +214,13 @@ function addUserMessage(text: string, media: UserMessageMedia = {}): void {
     }
 
     messages.appendChild(tray);
+  }
+
+  if (text) {
+    const node = document.createElement("div");
+    node.className = "tne-user-bubble";
+    node.textContent = text;
+    messages.appendChild(node);
   }
 
   scrollMessages();
