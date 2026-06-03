@@ -22,6 +22,7 @@ export interface BuildPayloadPayload {
   question: string;
   page: unknown;
   images?: string[];
+  history?: ChatHistoryItem[];
 }
 
 export type DiagTarget = "llm" | "vision";

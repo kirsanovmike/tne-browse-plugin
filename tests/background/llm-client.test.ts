@@ -29,6 +29,38 @@ describe("buildPrompt", () => {
     const prompt = buildPrompt({ question: "q", page: null });
     expect(prompt).toContain("Контекст не был извлечён.");
   });
+
+  it("omits the history block when there is no history", () => {
+    const prompt = buildPrompt({ question: "q", page: { text: "ctx" } });
+    expect(prompt).not.toContain("# Предыдущие сообщения");
+  });
+
+  it("renders the last exchanges as a history block, page context once", () => {
+    const prompt = buildPrompt({
+      question: "а подробнее?",
+      page: { text: "содержимое страницы" },
+      history: [
+        { role: "user", content: "что тут?" },
+        { role: "assistant", content: "первый ответ" },
+      ],
+    });
+    expect(prompt).toContain("# Предыдущие сообщения");
+    expect(prompt).toContain("Пользователь: что тут?");
+    expect(prompt).toContain("Ассистент: первый ответ");
+    // контекст страницы не дублируется внутри истории
+    expect(prompt.match(/содержимое страницы/g)).toHaveLength(1);
+  });
+
+  it("keeps only the last 2 exchanges", () => {
+    const history = Array.from({ length: 8 }, (_, i) => ({
+      role: i % 2 === 0 ? "user" : "assistant",
+      content: `m${i}`,
+    }));
+    const prompt = buildPrompt({ question: "q", page: {}, history });
+    expect(prompt).toContain("m4");
+    expect(prompt).toContain("m7");
+    expect(prompt).not.toContain("m3");
+  });
 });
 
 describe("buildBody", () => {

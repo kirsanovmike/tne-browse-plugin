@@ -97,7 +97,8 @@ export async function sendQuestion(force = false): Promise<void> {
     const response = (await browser.runtime.sendMessage({
       type: "TNE_ASK_MODEL",
       requestId,
-      payload: { question, page: STATE.page, history: STATE.history.slice(-6), images },
+      // 5.R2-2: только последние 2 обмена (чистые вопрос/ответ, без контекста страницы).
+      payload: { question, page: STATE.page, history: STATE.history.slice(-4), images },
     })) as (AskModelResponse & { data?: { content?: string; latencyMs?: number } }) | undefined;
 
     removeLoader(loaderId);

@@ -55,7 +55,7 @@ export async function updatePayloadPreview(): Promise<void> {
     const input = $("#tne-chat-input") as HTMLTextAreaElement | null;
     const response = (await browser.runtime.sendMessage({
       type: "TNE_BUILD_PAYLOAD",
-      payload: { question: input?.value?.trim() || "", page: STATE.page, images: attachmentImages() },
+      payload: { question: input?.value?.trim() || "", page: STATE.page, images: attachmentImages(), history: STATE.history.slice(-4) },
     })) as BuildPayloadResponse | undefined;
     if (response?.ok) {
       pre.textContent = JSON.stringify(response.body, null, 2);

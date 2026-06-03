@@ -17,6 +17,28 @@ export interface PromptInput {
   question?: unknown;
   page?: unknown;
   images?: unknown;
+  history?: unknown;
+}
+
+// 5.R2-2: в промпт едут только последние обмены (2 пары user/assistant),
+// каждое сообщение обрезается, чтобы история не раздувала запрос.
+const HISTORY_MESSAGES = 4;
+const HISTORY_MSG_MAX_CHARS = 1500;
+
+/** Строит блок «# Предыдущие сообщения» из последних обменов (без контекста страницы). */
+function buildHistoryBlock(history: unknown): string {
+  if (!Array.isArray(history)) return "";
+  const lines: string[] = [];
+  for (const item of history.slice(-HISTORY_MESSAGES)) {
+    if (!isRecord(item)) continue;
+    const role = String(item.role ?? "");
+    const content = String(item.content ?? "").trim();
+    if (!content) continue;
+    const who = role === "assistant" ? "Ассистент" : "Пользователь";
+    const text = content.length > HISTORY_MSG_MAX_CHARS ? `${content.slice(0, HISTORY_MSG_MAX_CHARS)}…` : content;
+    lines.push(`${who}: ${text}`);
+  }
+  return lines.join("\n");
 }
 
 export interface LlmResult {
@@ -63,6 +85,7 @@ export function buildPrompt(payload: PromptInput = {}, rolePrompt = ""): string 
   const page = isRecord(payload.page) ? payload.page : {};
   const context = String(page.text ?? "").trim();
   const role = String(rolePrompt ?? "").trim();
+  const history = buildHistoryBlock(payload.history);
 
   const intro = [
     "Ты — корпоративный ИИ-ассистент «ТНЭ чат». Отвечай на русском языке, кратко и по делу.",
@@ -70,7 +93,7 @@ export function buildPrompt(payload: PromptInput = {}, rolePrompt = ""): string 
   ];
   if (role) intro.push(role);
 
-  return [
+  const lines = [
     ...intro,
     "Контекст страницы передан структурированными блоками с идентификаторами: [PAGE], [SELECTED], [DOCUMENT Dn], [MODAL Mn], [FORM Fn], [TABLE Tn], [MAIN CONTENT].",
     "Используй только переданный контекст страницы и сам вопрос. Не выдумывай факты, которых нет в контексте.",
@@ -83,10 +106,26 @@ export function buildPrompt(payload: PromptInput = {}, rolePrompt = ""): string 
     "",
     "# Контекст страницы",
     context || "Контекст не был извлечён.",
+  ];
+
+  // 5.R2-2: история переписки — отдельным блоком, БЕЗ повторного контекста
+  // страницы (контекст всегда один блок выше). Учитывает связность диалога.
+  if (history) {
+    lines.push(
+      "",
+      "# Предыдущие сообщения",
+      "Учитывай их для связности ответа; контекст страницы выше актуален.",
+      history
+    );
+  }
+
+  lines.push(
     "",
     "# Вопрос пользователя",
-    question || "Кратко объясни, что находится на этой странице.",
-  ].join("\n");
+    question || "Кратко объясни, что находится на этой странице."
+  );
+
+  return lines.join("\n");
 }
 
 /** Строит тело запроса к endpoint (БЕЗ токена — он живёт только в заголовках). */
