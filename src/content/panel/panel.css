@@ -739,16 +739,18 @@
 
 .tne-stop-button {
   padding: 4px 9px;
-  border: 1px solid rgba(239, 68, 68, 0.4);
+  border: 1px solid rgba(248, 113, 113, 0.6);
   border-radius: 9px;
-  background: rgba(239, 68, 68, 0.12);
-  color: #fecaca;
+  background: rgba(239, 68, 68, 0.28);
+  color: #fee2e2;
+  font-weight: 700;
   cursor: pointer;
   font-size: 10px;
 }
 
 .tne-stop-button:hover {
-  background: rgba(239, 68, 68, 0.22);
+  background: rgba(239, 68, 68, 0.42);
+  border-color: rgba(248, 113, 113, 0.85);
 }
 
 /* ─── Кнопка копирования кода ─── */
@@ -1033,6 +1035,25 @@
   background: #f4f6fb;
   border-color: rgba(100, 116, 139, 0.3);
   color: #51607a;
+}
+
+/* Ошибка в чате — читаемый тёмно-красный текст на светлом фоне. */
+#tne-page-chat-root[data-theme="light"] .tne-error-card {
+  color: #b91c1c;
+  background: rgba(239, 68, 68, 0.08);
+  border-color: rgba(239, 68, 68, 0.4);
+}
+
+/* Кнопка «Остановить» — заметная подложка и тёмный текст на светлой теме. */
+#tne-page-chat-root[data-theme="light"] .tne-stop-button {
+  color: #b91c1c;
+  background: rgba(239, 68, 68, 0.14);
+  border-color: rgba(239, 68, 68, 0.5);
+}
+
+#tne-page-chat-root[data-theme="light"] .tne-stop-button:hover {
+  background: rgba(239, 68, 68, 0.24);
+  border-color: rgba(239, 68, 68, 0.7);
 }
 
 @media (max-width: 520px) {
