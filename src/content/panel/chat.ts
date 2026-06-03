@@ -81,7 +81,7 @@ export async function sendQuestion(force = false): Promise<void> {
 
   // HF2: показываем в пузыре, что реально ушло с вопросом (картинки + документ).
   const bubbleImages = STATE.attachments.map((a) => a.dataUrl);
-  const bubbleDoc = STATE.pdf?.name || STATE.docFile?.name || "";
+  const bubbleDoc = STATE.pdf?.name || "";
 
   input.value = "";
   input.style.height = "auto";

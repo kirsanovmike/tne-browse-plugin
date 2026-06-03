@@ -1,89 +1,22 @@
 /**
- * Оркестратор офисных документов (Phase 5): загрузка DOCX/XLSX в [DOCUMENT D1]
- * (взаимоисключение с PDF), бар управления документом и бар экспорта таблиц
- * страницы в .xlsx. UI/состояние/IO — ручная проверка, без юнит-тестов (§6).
+ * Экспорт таблиц страницы в .xlsx (Phase 5 / 5.R2-5). Сбор таблиц со страницы
+ * (строгий проход + фолбэк), компактный выбор при нескольких таблицах и запись
+ * через собственный лёгкий генератор XLSX. UI/состояние — ручная проверка (§6).
+ *
+ * 5.R2-8: чтение DOCX/XLSX и бар документа убраны — приложить можно только
+ * картинки и PDF (см. vision/attachments, pdf/*).
  */
 import { STATE, $ } from "../state";
 import { escapeHtml } from "../../shared/text";
 import { collectTables, collectTablesLoose, type CollectedTable } from "../context/collectors";
 import { highlightBlock } from "../render/source-highlight";
-import { refreshContext } from "../context/refresh";
 import { addAssistantMessage } from "../panel/chat";
-import { clearPdf } from "../pdf/pdf-attachments";
 import { downloadBlob } from "../render/download";
-import { readDocx, readXlsx } from "./io";
 import { matrixToXlsxBuffer } from "./xlsx-write";
-import { sheetsToContextText } from "./xlsx-format";
 import { buildTableFilename } from "./table-filename";
 
 let tablesBarOpen = false;
 let lastTables: CollectedTable[] = [];
-
-function sheetCount(text: string): number {
-  return (text.match(/\[SHEET «/g) || []).length;
-}
-
-/** Сбрасывает загруженный DOCX/XLSX и обновляет контекст. */
-export function clearDocFile(): void {
-  STATE.docFile = null;
-  renderDocBar();
-  void refreshContext(false, "docfile");
-}
-
-/** Загружает DOCX или XLSX по выбранному файлу (роутинг по расширению). */
-export async function loadDocFile(file: File): Promise<void> {
-  const name = file.name.toLowerCase();
-  try {
-    if (name.endsWith(".docx")) {
-      const text = await readDocx(file);
-      if (!text) {
-        addAssistantMessage("В документе .docx не найден текст.", { light: true });
-        return;
-      }
-      clearPdf();
-      STATE.docFile = { kind: "docx", name: file.name, documentText: text };
-    } else if (name.endsWith(".xlsx")) {
-      const text = sheetsToContextText(await readXlsx(file));
-      if (!text) {
-        addAssistantMessage("В книге .xlsx не найдено данных.", { light: true });
-        return;
-      }
-      clearPdf();
-      STATE.docFile = { kind: "xlsx", name: file.name, documentText: text };
-    } else {
-      addAssistantMessage("Поддерживаются только .docx и .xlsx.", { light: true });
-      return;
-    }
-    renderDocBar();
-    await refreshContext(false, "docfile");
-  } catch (error) {
-    addAssistantMessage(`Не удалось открыть документ: ${(error as Error)?.message || error}`, { light: true });
-  }
-}
-
-/** Рисует бар загруженного документа (имя/тип/удалить). */
-export function renderDocBar(): void {
-  const bar = $("#tne-doc-bar");
-  if (!bar) return;
-  const doc = STATE.docFile;
-  if (!doc) {
-    bar.hidden = true;
-    bar.innerHTML = "";
-    return;
-  }
-  const meta =
-    doc.kind === "docx"
-      ? `DOCX · ${doc.documentText.length} симв.`
-      : `XLSX · листов: ${sheetCount(doc.documentText)}`;
-  bar.hidden = false;
-  bar.innerHTML = `
-    <div class="tne-doc-head">
-      <span class="tne-doc-name" title="${escapeHtml(doc.name)}">${escapeHtml(doc.name)}</span>
-      <span class="tne-doc-meta">${escapeHtml(meta)}</span>
-      <button class="tne-icon-button" id="tne-doc-remove" type="button" title="Убрать документ" aria-label="Убрать документ">×</button>
-    </div>`;
-  bar.querySelector("#tne-doc-remove")?.addEventListener("click", () => clearDocFile());
-}
 
 /**
  * Собирает таблицы страницы: строгий проход, при пустом результате — фолбэк по
@@ -202,16 +135,9 @@ async function exportTableAt(index: number): Promise<void> {
   }
 }
 
-/** Привязывает кнопки документа и экспорта таблиц. */
+/** Привязывает кнопку экспорта таблиц страницы. */
 export function initOffice(root: HTMLElement): void {
   tablesBarOpen = false;
   lastTables = [];
-  const input = root.querySelector("#tne-doc-input") as HTMLInputElement | null;
-  root.querySelector("#tne-attach-doc")?.addEventListener("click", () => input?.click());
-  input?.addEventListener("change", () => {
-    const file = input.files?.[0];
-    if (file) void loadDocFile(file).finally(() => (input.value = ""));
-  });
   root.querySelector("#tne-tables-export")?.addEventListener("click", () => toggleTablesBar());
-  renderDocBar();
 }

@@ -82,12 +82,6 @@ async function openPdf(buf: ArrayBuffer, name: string, currentPage: number | nul
     documentText: "",
   };
   detectedTabPdfUrl = null;
-  STATE.docFile = null;
-  const docBar = $("#tne-doc-bar");
-  if (docBar) {
-    docBar.hidden = true;
-    docBar.innerHTML = "";
-  }
   renderPdfBar();
   await applyPdfSelection();
 }
@@ -246,13 +240,11 @@ export function renderPdfBar(): void {
   });
 }
 
-/** Привязывает кнопку загрузки PDF и input в футере. */
-export function initPdf(root: HTMLElement): void {
-  const input = root.querySelector("#tne-pdf-input") as HTMLInputElement | null;
-  root.querySelector("#tne-attach-pdf")?.addEventListener("click", () => input?.click());
-  input?.addEventListener("change", () => {
-    const file = input.files?.[0];
-    if (file) void loadPdfFromFile(file).finally(() => (input.value = ""));
-  });
+/**
+ * Инициализация PDF-бара. 5.R2-8: отдельной кнопки/инпута PDF больше нет — файлы
+ * приходят через единую кнопку «Приложить» (см. vision/attachments → loadPdfFromFile);
+ * здесь только рендер бара управления и предложение загрузить PDF из вкладки.
+ */
+export function initPdf(): void {
   renderPdfBar();
 }

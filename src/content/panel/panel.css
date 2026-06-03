@@ -1004,9 +1004,8 @@
   background: rgba(100, 116, 139, 0.4);
 }
 
-/* Бары документа/PDF/таблиц и лента вложений — на светлой палитре. */
+/* Бары PDF/таблиц и лента вложений — на светлой палитре. */
 #tne-page-chat-root[data-theme="light"] .tne-pdf-bar,
-#tne-page-chat-root[data-theme="light"] .tne-doc-bar,
 #tne-page-chat-root[data-theme="light"] .tne-tables-bar {
   background: #ffffff;
   border-color: rgba(100, 116, 139, 0.26);
@@ -1070,7 +1069,6 @@
 /* Когда нет ни одного активного бара и лента вложений пуста — над строкой
    иконок не должно быть ни отступа, ни зазора (только сам ряд кнопок). */
 .tne-attach-bar:not(:has(.tne-pdf-bar:not([hidden]),
-    .tne-doc-bar:not([hidden]),
     .tne-tables-bar:not([hidden]),
     .tne-attachments:not([hidden]))) {
   padding-top: 0;
@@ -1220,34 +1218,6 @@
   opacity: 0.8;
 }
 
-/* Phase 5 — бар загруженного документа (DOCX/XLSX) */
-.tne-doc-bar {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding: 8px 10px;
-  margin-bottom: 6px;
-  border: 1px solid var(--tne-border, rgba(255, 255, 255, 0.12));
-  border-radius: 10px;
-  background: var(--tne-surface-variant, rgba(255, 255, 255, 0.04));
-  font-size: 12px;
-}
-.tne-doc-head {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.tne-doc-name {
-  flex: 1;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-weight: 600;
-}
-.tne-doc-meta {
-  opacity: 0.7;
-  white-space: nowrap;
-}
 
 /* Phase 5 — бар экспорта таблиц страницы */
 .tne-tables-bar {

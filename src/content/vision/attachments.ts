@@ -10,6 +10,7 @@ import type { CaptureTabResponse } from "../../shared/messages";
 import { compressDataUrl, fileToDataUrl } from "./image-compressor";
 import { captureRegion } from "./region-capture";
 import { addAssistantMessage } from "../panel/chat";
+import { loadPdfFromFile } from "../pdf/pdf-attachments";
 
 const TNE_HOST_ID = "tne-page-chat-host";
 
@@ -83,12 +84,21 @@ async function captureAndAttachRegion(): Promise<void> {
   }
 }
 
-/** 2.3: загруженные файлы → сжатие → вложения. */
+/**
+ * 2.3 / 5.R2-8: загруженные файлы из единой кнопки «Приложить». Картинки идут в
+ * image-флоу, PDF — в loadPdfFromFile; прочие форматы (DOCX/XLSX и т.п.) больше
+ * не поддерживаются и пропускаются с понятным сообщением.
+ */
 async function attachFromFiles(files: FileList | null): Promise<void> {
   if (!files) return;
   for (const file of Array.from(files)) {
+    const isPdf = file.type === "application/pdf" || /\.pdf$/i.test(file.name);
+    if (isPdf) {
+      await loadPdfFromFile(file);
+      continue;
+    }
     if (!file.type.startsWith("image/")) {
-      addAssistantMessage(`Файл «${file.name}» не является изображением — пропущен.`, { light: true });
+      addAssistantMessage(`Можно приложить только изображение или PDF. Файл «${file.name}» пропущен.`, { light: true });
       continue;
     }
     if (STATE.attachments.length >= MAX_IMAGES) {

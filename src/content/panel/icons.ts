@@ -71,21 +71,6 @@ export const EXPORT_ICON = `
       <path d="M12 10v6m0 0-2.2-2.2M12 16l2.2-2.2" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
     </svg>`;
 
-export const PDF_ICON = `
-    <svg class="tne-action-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-      <path d="M6 2h8l4 4v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
-      <path d="M14 2v4h4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
-      <text x="12" y="17" text-anchor="middle" font-size="6" font-family="sans-serif" font-weight="700" fill="currentColor">PDF</text>
-    </svg>`;
-
-// Загрузка офисного документа (DOCX/XLSX) — лист с уголком.
-export const DOC_ICON = `
-    <svg class="tne-action-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-      <path d="M6 2h8l4 4v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
-      <path d="M14 2v4h4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
-      <path d="M8 12h8M8 15h8M8 18h5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-    </svg>`;
-
 // Экспорт таблиц в Excel — сетка со стрелкой вниз.
 export const TABLE_EXPORT_ICON = `
     <svg class="tne-action-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">

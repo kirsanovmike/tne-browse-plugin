@@ -64,10 +64,10 @@ export function buildStructuredContext(maxChars: number, scope: ScopeId = "all")
     sections.push({ tag: "SELECTED", header: "[SELECTED]", body: selection, priority: 1 });
   }
 
-  // [DOCUMENT] — текст загруженного документа: PDF (Phase 3) ИЛИ DOCX/XLSX
-  // (Phase 5). Слот один (взаимное исключение), поэтому всегда D1. Высокий
-  // приоритет удержания: загруженный документ — предмет вопроса.
-  const documentText = STATE.pdf?.documentText || STATE.docFile?.documentText;
+  // [DOCUMENT] — текст загруженного PDF (Phase 3). Слот один, поэтому всегда D1.
+  // Высокий приоритет удержания: загруженный документ — предмет вопроса.
+  // 5.R2-8: чтение DOCX/XLSX убрано, источник [DOCUMENT] — только PDF.
+  const documentText = STATE.pdf?.documentText;
   if (documentText) {
     sections.push({
       tag: "DOCUMENT",
