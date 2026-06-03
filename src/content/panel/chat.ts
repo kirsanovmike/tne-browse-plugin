@@ -59,7 +59,9 @@ export async function sendQuestion(force = false): Promise<void> {
   const question = resolved ? resolved.prompt : input.value.trim();
   if (!question) return;
 
-  if (STATE.contextDirty || !STATE.page) await refreshContext(false, "before-send");
+  // 5.R2-10: перед каждой отправкой безусловно пересобираем контекст —
+  // страховка от устаревшего контекста (DOM мог измениться без MutationObserver).
+  await refreshContext(false, "before-send");
 
   // Проверка чувствительных данных перед отправкой (карты/токены/ключи).
   if (!force) {

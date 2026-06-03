@@ -506,7 +506,12 @@ async function initRoleSelect(root: HTMLElement): Promise<void> {
   const settings = await readSettings();
   select.value = settings.roleId || DEFAULT_ROLE_ID;
   select.addEventListener("change", () => {
-    void writeSettings({ roleId: select.value });
+    // 5.R2-10: пишем роль и СРАЗУ пересобираем предпросмотр тела (системная
+    // добавка роли видна без ручного обновления). Скоуп это уже делает сам.
+    void writeSettings({ roleId: select.value }).then(() => {
+      const details = root.querySelector("#tne-payload-details") as HTMLDetailsElement | null;
+      if (details?.open) void updatePayloadPreview();
+    });
   });
 }
 
