@@ -195,6 +195,44 @@ label span code {
   color: #dbeafe;
 }
 
+/* 5.R3-6: строка автопроверки соединения (LLM + Vision) с цветовой индикацией. */
+.conn-status {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.conn-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 13px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: rgba(15, 22, 41, 0.62);
+  color: var(--on-surface);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.conn-pill::before {
+  content: "";
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--muted);
+  flex: 0 0 auto;
+}
+
+.conn-pill[data-state="checking"]::before { background: var(--muted-soft); }
+.conn-pill[data-state="ok"]::before { background: #22c55e; }
+.conn-pill[data-state="error"]::before { background: #ef4444; }
+.conn-pill[data-state="off"]::before { background: var(--muted); }
+
+.conn-pill[data-state="ok"] { border-color: rgba(34, 197, 94, 0.5); }
+.conn-pill[data-state="error"] { border-color: rgba(239, 68, 68, 0.5); }
+
 .diag-buttons {
   display: grid;
   grid-template-columns: 1fr 1fr;

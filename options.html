@@ -125,6 +125,10 @@
 
     <section class="card">
       <h2 class="card-title">Диагностика</h2>
+      <div class="conn-status" id="conn-status">
+        <span class="conn-pill" id="conn-llm" data-state="checking">LLM: проверка…</span>
+        <span class="conn-pill" id="conn-vision" data-state="checking">Vision: проверка…</span>
+      </div>
       <div class="diag-buttons">
         <button type="button" id="diag-ping">Проверить соединение с моделью</button>
         <button type="button" id="diag-vision">Проверить vision endpoint</button>

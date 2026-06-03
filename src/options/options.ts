@@ -21,6 +21,8 @@ const accessForm = document.getElementById("access-form") as HTMLFormElement;
 const status = document.getElementById("status") as HTMLElement;
 const accessStatus = document.getElementById("access-status") as HTMLElement;
 const diagOutput = document.getElementById("diag-output") as HTMLElement;
+const connLlm = document.getElementById("conn-llm") as HTMLElement;
+const connVision = document.getElementById("conn-vision") as HTMLElement;
 const tplList = document.getElementById("templates-list") as HTMLElement;
 const tplStatus = document.getElementById("tpl-status") as HTMLElement;
 let templates: PromptTemplate[] = [];
@@ -84,6 +86,39 @@ async function init(): Promise<void> {
 
   templates = settings.promptTemplates || [];
   renderTemplates();
+
+  // 5.R3-6: автопроверка соединения при открытии — не блокируем форму (без await).
+  autoCheckConnections(Boolean(settings.endpoint), Boolean(settings.visionEndpoint));
+}
+
+/** Цветовой статус-пилюли: state ∈ checking | ok | error | off. */
+function setPill(pill: HTMLElement, state: "checking" | "ok" | "error" | "off", text: string): void {
+  pill.dataset.state = state;
+  pill.textContent = text;
+}
+
+/** Стартовый автопинг LLM и (если задан) vision endpoint; пишет только в пилюли. */
+function autoCheckConnections(hasLlm: boolean, hasVision: boolean): void {
+  if (hasLlm) void pingPill("llm", connLlm, "LLM");
+  else setPill(connLlm, "off", "LLM: не задан");
+
+  if (hasVision) void pingPill("vision", connVision, "Vision");
+  else setPill(connVision, "off", "Vision: не задан");
+}
+
+/** Пингует endpoint и отражает результат в статус-пилюле (без вывода в diagOutput). */
+async function pingPill(target: DiagTarget, pill: HTMLElement, label: string): Promise<void> {
+  setPill(pill, "checking", `${label}: проверка…`);
+  try {
+    const result = (await browser.runtime.sendMessage({
+      type: "TNE_DIAG_PING",
+      target,
+    })) as DiagPingResponse | undefined;
+    if (result?.ok && result.reachable) setPill(pill, "ok", `${label}: доступен`);
+    else setPill(pill, "error", `${label}: ошибка`);
+  } catch {
+    setPill(pill, "error", `${label}: ошибка`);
+  }
 }
 
 form.addEventListener("submit", async (event) => {
@@ -150,8 +185,11 @@ tplImport.addEventListener("change", async () => {
 });
 
 async function runPing(target: DiagTarget): Promise<void> {
+  const pill = target === "vision" ? connVision : connLlm;
+  const label = target === "vision" ? "Vision" : "LLM";
   diagOutput.textContent =
     target === "vision" ? "Проверяю vision endpoint…" : "Проверяю соединение с моделью…";
+  setPill(pill, "checking", `${label}: проверка…`);
   try {
     const result = (await browser.runtime.sendMessage({
       type: "TNE_DIAG_PING",
@@ -159,11 +197,14 @@ async function runPing(target: DiagTarget): Promise<void> {
     })) as DiagPingResponse | undefined;
     if (result?.ok) {
       diagOutput.textContent = `${result.reachable ? "✅" : "⚠️"} ${result.message}`;
+      setPill(pill, result.reachable ? "ok" : "error", `${label}: ${result.reachable ? "доступен" : "ошибка"}`);
     } else {
       diagOutput.textContent = `❌ ${result?.error || "Не удалось выполнить проверку."}`;
+      setPill(pill, "error", `${label}: ошибка`);
     }
   } catch (error) {
     diagOutput.textContent = `❌ ${errorMessage(error)}`;
+    setPill(pill, "error", `${label}: ошибка`);
   }
 }
 
