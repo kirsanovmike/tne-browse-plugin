@@ -32,6 +32,7 @@ function cellToText(value: unknown): string {
     if (v.text != null) return String(v.text).trim();
     if (v.result != null) return String(v.result).trim();
     if (v.formula != null) return "";
+    if (v.sharedFormula != null) return "";
     if (v.error != null) return String(v.error);
   }
   return String(value).trim();
