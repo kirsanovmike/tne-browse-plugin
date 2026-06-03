@@ -33,9 +33,11 @@ import {
   REGION_ICON,
   ATTACH_ICON,
   PDF_ICON,
+  EXPORT_ICON,
 } from "./icons";
 import { initFontControls, initThemeControl, initResizeHandle, toggleTheme } from "./controls";
 import { renderWelcomeMessage, clearChat, sendQuestion, addAssistantMessage } from "./chat";
+import { exportDialog } from "../chat/export-md";
 import { initAttachments } from "../vision/attachments";
 import { initPdf, setDetectedTabPdf } from "../pdf/pdf-attachments";
 import { refreshContext, updatePayloadPreview } from "../context/refresh";
@@ -281,6 +283,7 @@ function buildPanelUI(root: HTMLElement): void {
               </div>
             </div>
             <button class="tne-icon-button" id="tne-theme-toggle" title="Тема оформления" type="button" aria-label="Сменить тему">${THEME_ICON}</button>
+            <button class="tne-icon-button" id="tne-chat-export" title="Экспортировать диалог в .md" type="button" aria-label="Экспортировать диалог в Markdown">${EXPORT_ICON}</button>
             <button class="tne-icon-button" id="tne-chat-clear" title="Очистить чат" type="button" aria-label="Очистить чат">${ERASER_ICON}</button>
             <button class="tne-icon-button" id="tne-chat-settings" title="Настройки" type="button" aria-label="Настройки">${GEAR_ICON}</button>
             <button class="tne-icon-button" id="tne-chat-close" title="Закрыть (Esc)" type="button" aria-label="Закрыть">${CLOSE_ICON}</button>
@@ -355,6 +358,7 @@ function buildPanelUI(root: HTMLElement): void {
   root.querySelector("#tne-chat-close")?.addEventListener("click", () => togglePanel());
   root.querySelector("#tne-theme-toggle")?.addEventListener("click", () => toggleTheme());
   root.querySelector("#tne-chat-settings")?.addEventListener("click", () => browser.runtime.sendMessage({ type: "TNE_OPEN_OPTIONS" }));
+  root.querySelector("#tne-chat-export")?.addEventListener("click", () => exportDialog());
   root.querySelector("#tne-chat-clear")?.addEventListener("click", () => clearChat());
   root.querySelector("#tne-refresh-context")?.addEventListener("click", () => refreshContext(true, "button"));
   root.querySelector("#tne-chat-send")?.addEventListener("click", () => sendQuestion());

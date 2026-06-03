@@ -565,3 +565,33 @@
   тон ответа и предпросмотр payload; шаблон с переменными + экспорт/импорт;
   кнопки под ответом, «Без картинок» после запроса с картинкой) выполняет владелец
   (как в Phase 1–4 P0).
+
+## PHASE 4 — Продуктовый UX (P2 4.9)
+
+Закрыта последняя задача Phase 4 — `P2 4.9 Экспорт диалога в .md`. Контракт
+сообщений (`messages.ts`) и манифест НЕ менялись: экспорт целиком в content, без
+обращения к фону и без новых прав.
+
+- **[4.9] Экспорт диалога в .md** — `src/content/chat/export-md.ts`:
+  - **Чистая часть (Vitest):** `dialogToMarkdown(history, meta)` сериализует
+    `STATE.history` (пары вопрос/ответ) в markdown — заголовок «ТНЭ чат — экспорт
+    диалога», опциональный блок метаданных (страница/URL/дата), затем секции
+    `## Вопрос` / `## Ответ` через `---`; схлопывает лишние пустые строки, гарантирует
+    финальный `\n`. `buildExportFilename(title, date)` — имя `tne-chat-<slug>-<YYYY-MM-DD-HHMM>.md`
+    (slug из заголовка, фолбэк без slug; обрезка длинных заголовков до 48 симв.).
+  - **DOM-обвязка (без юнит-тестов, §6):** `exportDialog()` — собирает markdown из
+    `STATE.history` + `STATE.page` (title/url/`toLocaleString("ru-RU")`), формирует
+    `Blob` (`text/markdown`), скачивает через временную `<a download>` +
+    `URL.createObjectURL`/`revokeObjectURL`. Пустой диалог → `showPanelToast`
+    («нечего экспортировать»), без скачивания.
+  - **UI:** кнопка-иконка `#tne-chat-export` (`EXPORT_ICON` — лист со стрелкой вниз,
+    `icons.ts`) в шапке слева от «Очистить чат»; класс `tne-icon-button`
+    переиспользован — CSS не трогали. Контракт/манифест без изменений.
+- **Файлы:** new `src/content/chat/export-md.ts`,
+  `tests/content/chat/export-md.test.ts` (+8); правки `src/content/panel/icons.ts`
+  (`EXPORT_ICON`), `src/content/panel/panel.ts` (импорт, кнопка в шапке, обработчик).
+- **Проверка:** `npm run ci` зелёный — `tsc --noEmit` (strict) чист; `vitest run` —
+  **163/163** (155 прежних + 8 новых: dialogToMarkdown 5 + buildExportFilename 3);
+  `npm run build` собирает `dist/firefox` и `dist/chrome` (MV3). Ручную проверку в
+  Firefox+Chromium (кнопка экспорта после диалога → корректный .md с метаданными;
+  тост на пустом диалоге) выполняет владелец (как в Phase 1–4).

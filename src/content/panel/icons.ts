@@ -63,6 +63,14 @@ export const ATTACH_ICON = `
       <path d="M19 11.5 12 18.5a4 4 0 0 1-5.7-5.7l7-7a2.6 2.6 0 0 1 3.7 3.7l-7 7a1.2 1.2 0 0 1-1.7-1.7l6.3-6.3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
     </svg>`;
 
+// Экспорт диалога — лист со стрелкой вниз (скачать .md).
+export const EXPORT_ICON = `
+    <svg class="tne-action-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <path d="M6 2h8l4 4v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+      <path d="M14 2v4h4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+      <path d="M12 10v6m0 0-2.2-2.2M12 16l2.2-2.2" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>`;
+
 export const PDF_ICON = `
     <svg class="tne-action-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
       <path d="M6 2h8l4 4v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
