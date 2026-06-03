@@ -524,6 +524,8 @@ function buildScopeRow(root: HTMLElement): void {
     button.className = "tne-scope-button";
     button.dataset.scope = scope.id;
     button.textContent = scope.label;
+    button.title = scope.hint; // 5.R2-11: пояснение режима тултипом
+    button.setAttribute("aria-label", `${scope.label}: ${scope.hint}`);
     if (scope.id === STATE.scope) button.classList.add("tne-scope-button--active");
     button.addEventListener("click", () => {
       setScope(scope.id);

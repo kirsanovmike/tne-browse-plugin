@@ -35,13 +35,24 @@ export type ScopeId = "all" | "visible" | "selection" | "tables";
 export interface ScopeOption {
   id: ScopeId;
   label: string;
+  /** Пояснение к режиму (тултип): что собирает и когда использовать. */
+  hint: string;
 }
 
+// 5.R2-11: оставлены два главных режима. «Видимое» и «Таблицы» убраны как
+// нишевые (экспорт таблиц живёт отдельной кнопкой). ScopeId сохраняет старые
+// значения для совместимости логики сбора, но в UI они не предлагаются.
 export const SCOPES: readonly ScopeOption[] = [
-  { id: "all", label: "Вся страница" },
-  { id: "visible", label: "Видимое" },
-  { id: "selection", label: "Выделение" },
-  { id: "tables", label: "Таблицы" },
+  {
+    id: "all",
+    label: "Вся страница",
+    hint: "По умолчанию: берёт основной текст, заголовки, формы и таблицы всей страницы.",
+  },
+  {
+    id: "selection",
+    label: "Выделение",
+    hint: "Точный режим: отвечает строго по выделенному на странице фрагменту.",
+  },
 ];
 
 export interface QuickAction {
