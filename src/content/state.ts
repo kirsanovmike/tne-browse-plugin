@@ -82,6 +82,12 @@ export interface PdfState {
   documentText: string; // готовое тело блока [DOCUMENT]
 }
 
+export interface DocFileState {
+  kind: "docx" | "xlsx";
+  name: string;
+  documentText: string; // готовое тело блока [DOCUMENT D1]
+}
+
 export interface ContentState {
   opened: boolean;
   allowed: boolean | null;
@@ -93,6 +99,7 @@ export interface ContentState {
   history: ChatHistoryItem[];
   attachments: Attachment[];
   pdf: PdfState | null;
+  docFile: DocFileState | null;
   isSending: boolean;
   currentRequestId: string | null;
   lastQuestion: string;
@@ -121,6 +128,7 @@ export const STATE: ContentState = {
   history: [],
   attachments: [],
   pdf: null,
+  docFile: null,
   isSending: false,
   currentRequestId: null,
   lastQuestion: "",

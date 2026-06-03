@@ -1,9 +1,9 @@
 /**
  * Форматирование таблицы в Markdown (дизайн §3, §7 M3).
  *
- * Чистая часть: матрица ячеек (уже нормализованных и с экранированными `|`) →
- * Markdown-таблица. DOM-извлечение строк/ячеек живёт в `collectors.ts`.
- * Перенесено из `content.js` (tableToMarkdown) без изменения поведения → Vitest.
+ * Чистая часть: матрица сырых ячеек (нормализованных, без markdown-экранирования)
+ * → Markdown-таблица. Экранирование `|` делается здесь. DOM-извлечение строк —
+ * в `collectors.ts`.
  */
 
 /** Матрица ячеек (строки × колонки) → Markdown-таблица. "" если колонок нет. */
@@ -14,7 +14,7 @@ export function matrixToMarkdown(matrix: string[][]): string {
   if (!cols) return "";
 
   const pad = (row: string[]): string => {
-    const filled = [...row];
+    const filled = row.map((cell) => cell.replace(/\|/g, "\\|"));
     while (filled.length < cols) filled.push("");
     return `| ${filled.join(" | ")} |`;
   };

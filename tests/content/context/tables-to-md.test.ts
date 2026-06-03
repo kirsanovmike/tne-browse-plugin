@@ -21,4 +21,8 @@ describe("matrixToMarkdown", () => {
   it("returns an empty string when no row has any cells", () => {
     expect(matrixToMarkdown([[], []])).toBe("");
   });
+
+  it("escapes pipe characters inside cells", () => {
+    expect(matrixToMarkdown([["a|b", "c"]])).toBe("| a\\|b | c |\n| --- | --- |");
+  });
 });

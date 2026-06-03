@@ -6,6 +6,7 @@
 import type { ChatHistoryItem } from "../../shared/messages";
 import { STATE } from "../state";
 import { showPanelToast } from "../render/source-highlight";
+import { downloadBlob } from "../render/download";
 
 export interface DialogMeta {
   title?: string;
@@ -59,13 +60,5 @@ export function exportDialog(): void {
   });
 
   const blob = new Blob([markdown], { type: "text/markdown;charset=utf-8" });
-  const objectUrl = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = objectUrl;
-  link.download = buildExportFilename(STATE.page?.title || document.title, now);
-  link.style.display = "none";
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
-  setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+  downloadBlob(blob, buildExportFilename(STATE.page?.title || document.title, now));
 }

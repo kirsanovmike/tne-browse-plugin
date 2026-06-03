@@ -82,6 +82,12 @@ async function openPdf(buf: ArrayBuffer, name: string, currentPage: number | nul
     documentText: "",
   };
   detectedTabPdfUrl = null;
+  STATE.docFile = null;
+  const docBar = $("#tne-doc-bar");
+  if (docBar) {
+    docBar.hidden = true;
+    docBar.innerHTML = "";
+  }
   renderPdfBar();
   await applyPdfSelection();
 }

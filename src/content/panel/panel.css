@@ -1099,6 +1099,76 @@
   opacity: 0.8;
 }
 
+/* Phase 5 — бар загруженного документа (DOCX/XLSX) */
+.tne-doc-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 10px;
+  margin-bottom: 6px;
+  border: 1px solid var(--tne-border, rgba(255, 255, 255, 0.12));
+  border-radius: 10px;
+  background: var(--tne-surface-variant, rgba(255, 255, 255, 0.04));
+  font-size: 12px;
+}
+.tne-doc-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.tne-doc-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+}
+.tne-doc-meta {
+  opacity: 0.7;
+  white-space: nowrap;
+}
+
+/* Phase 5 — бар экспорта таблиц страницы */
+.tne-tables-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 10px;
+  margin-bottom: 6px;
+  border: 1px solid var(--tne-border, rgba(255, 255, 255, 0.12));
+  border-radius: 10px;
+  background: var(--tne-surface-variant, rgba(255, 255, 255, 0.04));
+  font-size: 12px;
+}
+.tne-tables-head {
+  font-weight: 600;
+  opacity: 0.85;
+  margin-bottom: 2px;
+}
+.tne-table-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 3px 4px;
+  border-radius: 6px;
+  cursor: default;
+}
+.tne-table-row:hover {
+  background: var(--tne-surface, rgba(255, 255, 255, 0.06));
+}
+.tne-table-label {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--tne-on-surface);
+}
+.tne-table-export {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
 /* 4.1/4.2 — кликабельные метки-источники */
 .tne-source-link {
   display: inline;

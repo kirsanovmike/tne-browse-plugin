@@ -34,12 +34,15 @@ import {
   ATTACH_ICON,
   PDF_ICON,
   EXPORT_ICON,
+  DOC_ICON,
+  TABLE_EXPORT_ICON,
 } from "./icons";
 import { initFontControls, initThemeControl, initResizeHandle, toggleTheme } from "./controls";
 import { renderWelcomeMessage, clearChat, sendQuestion, addAssistantMessage } from "./chat";
 import { exportDialog } from "../chat/export-md";
 import { initAttachments } from "../vision/attachments";
 import { initPdf, setDetectedTabPdf } from "../pdf/pdf-attachments";
+import { initOffice } from "../office/office";
 import { refreshContext, updatePayloadPreview } from "../context/refresh";
 import { startUrlWatcher, startDomWatcher } from "../spa-keeper";
 import { getSafeSelection } from "../context/text-extract";
@@ -325,14 +328,19 @@ function buildPanelUI(root: HTMLElement): void {
 
         <div class="tne-attach-bar">
           <div class="tne-pdf-bar" id="tne-pdf-bar" hidden></div>
+          <div class="tne-doc-bar" id="tne-doc-bar" hidden></div>
+          <div class="tne-tables-bar" id="tne-tables-bar" hidden></div>
           <div class="tne-attachments" id="tne-attachments" hidden></div>
           <div class="tne-attach-buttons">
             <button class="tne-attach-button" id="tne-attach-screen" type="button" title="Снимок видимой области" aria-label="Снимок видимой области">${CAMERA_ICON}</button>
             <button class="tne-attach-button" id="tne-attach-region" type="button" title="Снимок области рамкой" aria-label="Снимок области рамкой">${REGION_ICON}</button>
             <button class="tne-attach-button" id="tne-attach-file" type="button" title="Загрузить изображение" aria-label="Загрузить изображение">${ATTACH_ICON}</button>
             <button class="tne-attach-button" id="tne-attach-pdf" type="button" title="Загрузить PDF" aria-label="Загрузить PDF">${PDF_ICON}</button>
+            <button class="tne-attach-button" id="tne-attach-doc" type="button" title="Загрузить документ (DOCX/XLSX)" aria-label="Загрузить документ">${DOC_ICON}</button>
+            <button class="tne-attach-button" id="tne-tables-export" type="button" title="Экспорт таблиц страницы в Excel" aria-label="Экспорт таблиц в Excel">${TABLE_EXPORT_ICON}</button>
             <input id="tne-attach-input" type="file" accept="image/png,image/jpeg,image/webp" multiple hidden />
             <input id="tne-pdf-input" type="file" accept="application/pdf" hidden />
+            <input id="tne-doc-input" type="file" accept=".docx,.xlsx,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" hidden />
           </div>
         </div>
 
@@ -354,6 +362,7 @@ function buildPanelUI(root: HTMLElement): void {
   void initRoleSelect(root);
   initAttachments(root);
   initPdf(root);
+  initOffice(root);
 
   root.querySelector("#tne-chat-close")?.addEventListener("click", () => togglePanel());
   root.querySelector("#tne-theme-toggle")?.addEventListener("click", () => toggleTheme());
