@@ -84,9 +84,28 @@ export function renderDocBar(): void {
   bar.querySelector("#tne-doc-remove")?.addEventListener("click", () => clearDocFile());
 }
 
-/** Переключает видимость бара экспорта таблиц. */
+/**
+ * HF4: клик по «Экспорт таблиц». Если бар открыт — закрывает. Если закрыт —
+ * собирает таблицы: нет таблиц → тост; одна → сразу скачивает (без бара);
+ * несколько → показывает компактный список (он сам закроется после экспорта).
+ */
 export function toggleTablesBar(): void {
-  tablesBarOpen = !tablesBarOpen;
+  if (tablesBarOpen) {
+    tablesBarOpen = false;
+    renderTablesBar();
+    return;
+  }
+  const tables = collectTables();
+  if (!tables.length) {
+    showPanelToast("На странице не найдено таблиц для экспорта.");
+    return;
+  }
+  lastTables = tables;
+  if (tables.length === 1) {
+    void exportTableAt(0);
+    return;
+  }
+  tablesBarOpen = true;
   renderTablesBar();
 }
 
@@ -150,9 +169,16 @@ async function exportTableAt(index: number): Promise<void> {
     const blob = new Blob([buffer], {
       type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     });
-    downloadBlob(blob, buildTableFilename(STATE.page?.title || document.title, index + 1, new Date()));
+    await downloadBlob(blob, buildTableFilename(STATE.page?.title || document.title, index + 1, new Date()));
+    showPanelToast("Таблица выгружена в .xlsx.");
+    // HF4: после экспорта не оставляем список висеть.
+    if (tablesBarOpen) {
+      tablesBarOpen = false;
+      renderTablesBar();
+    }
   } catch (error) {
-    showPanelToast(`Не удалось сформировать .xlsx: ${(error as Error)?.message || error}`);
+    // HF3: ошибки экспорта видны в ленте чата, а не только тостом.
+    addAssistantMessage(`Не удалось сформировать .xlsx: ${(error as Error)?.message || error}`, { light: true });
   }
 }
 

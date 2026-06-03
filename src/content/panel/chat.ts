@@ -79,9 +79,13 @@ export async function sendQuestion(force = false): Promise<void> {
   const images = attachmentImages();
   STATE.lastRequestHadImages = images.length > 0;
 
+  // HF2: показываем в пузыре, что реально ушло с вопросом (картинки + документ).
+  const bubbleImages = STATE.attachments.map((a) => a.dataUrl);
+  const bubbleDoc = STATE.pdf?.name || STATE.docFile?.name || "";
+
   input.value = "";
   input.style.height = "auto";
-  addUserMessage(question);
+  addUserMessage(question, { images: bubbleImages, docName: bubbleDoc });
   STATE.lastQuestion = question;
 
   const requestId = `tne-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -182,13 +186,51 @@ function setSending(value: boolean): void {
   }
 }
 
-function addUserMessage(text: string): void {
+interface UserMessageMedia {
+  images?: string[]; // dataUrl-превью реально отправленных картинок
+  docName?: string; // имя приложенного документа (PDF/DOCX/XLSX), если есть
+}
+
+function addUserMessage(text: string, media: UserMessageMedia = {}): void {
   const messages = $("#tne-chat-messages");
   if (!messages) return;
-  const node = document.createElement("div");
-  node.className = "tne-user-bubble";
-  node.textContent = text;
-  messages.appendChild(node);
+
+  if (text) {
+    const node = document.createElement("div");
+    node.className = "tne-user-bubble";
+    node.textContent = text;
+    messages.appendChild(node);
+  }
+
+  const images = media.images ?? [];
+  if (images.length || media.docName) {
+    const tray = document.createElement("div");
+    tray.className = "tne-bubble-attachments";
+
+    if (media.docName) {
+      const doc = document.createElement("div");
+      doc.className = "tne-bubble-doc";
+      const icon = document.createElement("span");
+      icon.textContent = "📄";
+      icon.setAttribute("aria-hidden", "true");
+      const name = document.createElement("span");
+      name.className = "tne-bubble-doc-name";
+      name.textContent = media.docName;
+      doc.append(icon, name);
+      tray.appendChild(doc);
+    }
+
+    for (const dataUrl of images) {
+      const img = document.createElement("img");
+      img.className = "tne-bubble-thumb";
+      img.src = dataUrl;
+      img.alt = "отправленное изображение";
+      tray.appendChild(img);
+    }
+
+    messages.appendChild(tray);
+  }
+
   scrollMessages();
 }
 

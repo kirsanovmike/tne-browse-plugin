@@ -60,5 +60,5 @@ export function exportDialog(): void {
   });
 
   const blob = new Blob([markdown], { type: "text/markdown;charset=utf-8" });
-  downloadBlob(blob, buildExportFilename(STATE.page?.title || document.title, now));
+  void downloadBlob(blob, buildExportFilename(STATE.page?.title || document.title, now));
 }

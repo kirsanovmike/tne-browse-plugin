@@ -15,6 +15,7 @@ import type {
   AskModelResponse,
   BuildPayloadResponse,
   CaptureTabResponse,
+  DownloadFileResponse,
   DiagPingResponse,
   GetDiagResponse,
   OkResponse,
@@ -22,6 +23,7 @@ import type {
 import { askModel, buildBody, normalizeError, abortRequest, redactImagesForPreview } from "./llm-client";
 import { diagSink, diagPing, getDiag } from "./diagnostics";
 import { captureActiveTab } from "./capture";
+import { downloadFile } from "./download";
 
 function isAbort(error: unknown): boolean {
   return (
@@ -43,6 +45,7 @@ type RouteResult =
   | AskModelResponse
   | BuildPayloadResponse
   | CaptureTabResponse
+  | DownloadFileResponse
   | DiagPingResponse
   | GetDiagResponse
   | OkResponse;
@@ -86,6 +89,11 @@ export function routeMessage(message: unknown): false | Promise<RouteResult> {
       return captureActiveTab()
         .then((dataUrl): CaptureTabResponse => ({ ok: true, dataUrl }))
         .catch((error): CaptureTabResponse => ({ ok: false, error: normalizeError(error) }));
+
+    case "TNE_DOWNLOAD_FILE":
+      return downloadFile(message.dataUrl, message.filename)
+        .then((): DownloadFileResponse => ({ ok: true }))
+        .catch((error): DownloadFileResponse => ({ ok: false, error: normalizeError(error) }));
 
     case "TNE_GET_DIAG":
       return getDiag().then((diag): GetDiagResponse => ({ ok: true, ...diag }));

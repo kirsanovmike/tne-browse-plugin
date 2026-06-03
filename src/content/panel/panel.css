@@ -5,6 +5,7 @@
   --tne-sidebar-bg: #111827;
   --tne-header-bg: #181f30;
   --tne-chat-card: #1e283b;
+  --tne-surface-2: rgba(30, 41, 59, 0.78);
   --tne-primary: #9a244f;
   --tne-primary-lighten: #7c1b3a;
   --tne-rag: #0d9488;
@@ -366,6 +367,45 @@
   font-size: var(--tne-content-font-size);
   line-height: 1.48;
   white-space: pre-wrap;
+}
+
+/* HF2 — вложения, реально ушедшие с вопросом, показываем в пузыре сообщения. */
+.tne-bubble-attachments {
+  align-self: flex-end;
+  max-width: 86%;
+  margin-top: -2px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.tne-bubble-thumb {
+  width: 56px;
+  height: 56px;
+  border-radius: 10px;
+  object-fit: cover;
+  border: 1px solid var(--tne-border);
+  background: var(--tne-surface-2);
+}
+
+.tne-bubble-doc {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  padding: 6px 10px;
+  border-radius: 10px;
+  border: 1px solid var(--tne-border);
+  background: var(--tne-surface-2);
+  color: var(--tne-on-surface);
+  font-size: 12px;
+}
+
+.tne-bubble-doc-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .tne-assistant-card,
@@ -830,6 +870,7 @@
   --tne-sidebar-bg: #f3f5fa;
   --tne-header-bg: #ffffff;
   --tne-chat-card: #ffffff;
+  --tne-surface-2: #f1f4f9;
   --tne-text: #16203a;
   --tne-on-surface: #283448;
   --tne-muted: #64748b;
@@ -931,6 +972,38 @@
   background: rgba(100, 116, 139, 0.4);
 }
 
+/* Бары документа/PDF/таблиц и лента вложений — на светлой палитре. */
+#tne-page-chat-root[data-theme="light"] .tne-pdf-bar,
+#tne-page-chat-root[data-theme="light"] .tne-doc-bar,
+#tne-page-chat-root[data-theme="light"] .tne-tables-bar {
+  background: #ffffff;
+  border-color: rgba(100, 116, 139, 0.26);
+  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.06);
+}
+
+#tne-page-chat-root[data-theme="light"] .tne-attach-button:hover {
+  filter: none;
+  background: #eef1f7;
+  border-color: rgba(13, 148, 136, 0.55);
+}
+
+/* Предупреждение о чувствительных данных — читаемый контраст на светлом. */
+#tne-page-chat-root[data-theme="light"] .tne-warning-bar {
+  background: rgba(212, 130, 42, 0.12);
+  color: #7a3d05;
+}
+
+#tne-page-chat-root[data-theme="light"] .tne-warning-actions button {
+  color: #7a3d05;
+  background: rgba(212, 130, 42, 0.16);
+}
+
+#tne-page-chat-root[data-theme="light"] #tne-warning-cancel {
+  background: #f4f6fb;
+  border-color: rgba(100, 116, 139, 0.3);
+  color: #51607a;
+}
+
 @media (max-width: 520px) {
   #tne-page-chat-root {
     width: 100vw;
@@ -968,8 +1041,8 @@
   height: 64px;
   border-radius: 12px;
   overflow: hidden;
-  border: 1px solid rgba(106, 127, 154, 0.28);
-  background: rgba(30, 41, 59, 0.78);
+  border: 1px solid var(--tne-border);
+  background: var(--tne-surface-2);
 }
 
 .tne-attachment-thumb {
@@ -1020,8 +1093,8 @@
   place-items: center;
   border-radius: 11px;
   color: var(--tne-on-surface);
-  background: rgba(30, 41, 59, 0.78);
-  border: 1px solid rgba(106, 127, 154, 0.22);
+  background: var(--tne-surface-2);
+  border: 1px solid var(--tne-border);
   cursor: pointer;
   transition: filter 0.16s ease, border-color 0.16s ease;
 }

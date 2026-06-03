@@ -36,6 +36,7 @@ export type TneRequest =
   | { type: "TNE_BUILD_PAYLOAD"; payload: BuildPayloadPayload }
   | { type: "TNE_DIAG_PING"; target: DiagTarget }
   | { type: "TNE_CAPTURE_TAB" }
+  | { type: "TNE_DOWNLOAD_FILE"; dataUrl: string; filename: string }
   | { type: "TNE_GET_DIAG" }
   | { type: "TNE_SELECTION_ACTION"; actionId: string };
 
@@ -77,5 +78,10 @@ export interface OkResponse {
 export interface CaptureTabResponse {
   ok: boolean;
   dataUrl?: string;
+  error?: string;
+}
+
+export interface DownloadFileResponse {
+  ok: boolean;
   error?: string;
 }
