@@ -531,9 +531,10 @@
   40% { transform: translateY(-3px); opacity: 1; }
 }
 
+/* 5.R2-4: три действия в один ряд; при сужении панели плавно переносятся. */
 .tne-quick-actions {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+  display: flex;
+  flex-wrap: wrap;
   gap: 8px;
   flex: 0 0 auto;
   padding: 8px 14px 8px;
@@ -541,6 +542,8 @@
 }
 
 .tne-quick-actions button {
+  flex: 1 1 0;
+  min-width: 96px;
   min-height: 43px;
   padding: 9px 12px 8px;
   text-align: left;
@@ -1044,8 +1047,8 @@
     border-radius: 0;
   }
 
-  .tne-quick-actions {
-    grid-template-columns: 1fr;
+  .tne-quick-actions button {
+    flex-basis: 100%;
   }
 }
 
