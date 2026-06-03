@@ -21,6 +21,7 @@ export interface CollectedBlock {
 export interface CollectedTable {
   element: Element;
   markdown: string;
+  matrix: string[][];
 }
 
 export function collectModals(): CollectedBlock[] {
@@ -75,31 +76,30 @@ export function collectTables(): CollectedTable[] {
   const seen = new Set<string>();
 
   for (const table of tables) {
-    const markdown = tableToMarkdown(table);
+    const matrix = tableToMatrix(table);
+    const markdown = matrixToMarkdown(matrix);
     if (!markdown) continue;
     const key = markdown.slice(0, 300).toLowerCase();
     if (seen.has(key)) continue;
     seen.add(key);
-    result.push({ element: table, markdown });
+    result.push({ element: table, markdown, matrix });
     if (result.length >= 8) break;
   }
   return result;
 }
 
-function tableToMarkdown(table: Element): string {
+function tableToMatrix(table: Element): string[][] {
   const rows = [...table.querySelectorAll("tr")]
     .filter((tr) => isReadableElement(tr) && !isInsideExtension(tr))
     .slice(0, 60);
-  if (!rows.length) return "";
+  if (!rows.length) return [];
 
-  const matrix = rows.map((tr) =>
+  return rows.map((tr) =>
     [...tr.children]
       .filter((cell) => ["td", "th"].includes(cell.tagName.toLowerCase()))
       .slice(0, 12)
-      .map((cell) => normalizeText((cell as HTMLElement).innerText || cell.textContent || "").replace(/\|/g, "\\|"))
+      .map((cell) => normalizeText((cell as HTMLElement).innerText || cell.textContent || ""))
   );
-
-  return matrixToMarkdown(matrix);
 }
 
 export function collectHeadings(): string[] {
