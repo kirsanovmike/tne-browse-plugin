@@ -5,9 +5,14 @@
  * `findSourceLabels` — чистая (покрыта Vitest); `linkifySources` — DOM-обход
  * (без юнит-тестов, ручная проверка, §6 стиля проекта).
  */
+import { STATE } from "../state";
 
-/** Распознаёт [FORM Fn]/[TABLE Tn]/[MODAL Mn]/[DOCUMENT Dn] и [SELECTED]/[PAGE]/[MAIN CONTENT]. */
-const LABEL_SOURCE = "\\[(FORM|TABLE|MODAL|DOCUMENT)\\s+([A-Z]\\d+)\\]|\\[(SELECTED|PAGE|MAIN CONTENT)\\]";
+/**
+ * Распознаёт [FORM Fn]/[TABLE Tn]/[MODAL Mn]/[DOCUMENT Dn] и [SELECTED]/[MAIN CONTENT].
+ * [PAGE] намеренно не распознаётся (5.R3-2): это метаданные (title/url/время),
+ * их нельзя подсветить как DOM-элемент → остаются обычным текстом.
+ */
+const LABEL_SOURCE = "\\[(FORM|TABLE|MODAL|DOCUMENT)\\s+([A-Z]\\d+)\\]|\\[(SELECTED|MAIN CONTENT)\\]";
 
 export interface SourceLabel {
   index: number;
@@ -47,22 +52,34 @@ export function linkifySources(target: HTMLElement): void {
   nodes.forEach(replaceInTextNode);
 }
 
+/** Блок локализуем (5.R3-2): есть живой DOM-элемент в blockMap на момент рендера. */
+function isBlockLocatable(blockId: string): boolean {
+  const el = STATE.blockMap[blockId];
+  return !!(el && el instanceof Element && el.isConnected);
+}
+
 function replaceInTextNode(textNode: Text): void {
   const text = textNode.nodeValue || "";
   const labels = findSourceLabels(text);
-  if (!labels.length) return;
+  // Кликабельными делаем только метки, у которых есть что подсветить, — иначе
+  // оставляем обычным текстом (нет «мёртвых» ссылок и тостов «не найден»).
+  if (!labels.some((item) => isBlockLocatable(item.blockId))) return;
 
   const fragment = document.createDocumentFragment();
   let last = 0;
   for (const item of labels) {
     if (item.index > last) fragment.appendChild(document.createTextNode(text.slice(last, item.index)));
-    const span = document.createElement("span");
-    span.className = "tne-source-link";
-    span.setAttribute("data-block-id", item.blockId);
-    span.setAttribute("role", "button");
-    span.setAttribute("tabindex", "0");
-    span.textContent = item.label;
-    fragment.appendChild(span);
+    if (isBlockLocatable(item.blockId)) {
+      const span = document.createElement("span");
+      span.className = "tne-source-link";
+      span.setAttribute("data-block-id", item.blockId);
+      span.setAttribute("role", "button");
+      span.setAttribute("tabindex", "0");
+      span.textContent = item.label;
+      fragment.appendChild(span);
+    } else {
+      fragment.appendChild(document.createTextNode(item.label));
+    }
     last = item.index + item.length;
   }
   if (last < text.length) fragment.appendChild(document.createTextNode(text.slice(last)));

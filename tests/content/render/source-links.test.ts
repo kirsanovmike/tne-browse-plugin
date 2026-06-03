@@ -16,9 +16,10 @@ describe("findSourceLabels", () => {
     expect(out.map((l) => l.blockId)).toEqual(["T2", "M1", "D1"]);
   });
 
-  it("recognizes bracket-only labels SELECTED / PAGE / MAIN CONTENT", () => {
+  it("recognizes bracket-only labels SELECTED / MAIN CONTENT but not PAGE", () => {
+    // 5.R3-2: [PAGE] — метаданные, не локализуются → остаётся обычным текстом.
     const out = findSourceLabels("[SELECTED] [PAGE] [MAIN CONTENT]");
-    expect(out.map((l) => l.blockId)).toEqual(["SELECTED", "PAGE", "MAIN CONTENT"]);
+    expect(out.map((l) => l.blockId)).toEqual(["SELECTED", "MAIN CONTENT"]);
   });
 
   it("returns empty for text without labels", () => {

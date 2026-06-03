@@ -185,3 +185,16 @@ export function getSafeSelection(): string {
   if (isInsideExtension(selection.anchorNode) || isInsideExtension(selection.focusNode)) return "";
   return normalizeText(String(selection).slice(0, 6000));
 }
+
+/**
+ * Общий контейнер текущего выделения как Element — для подсветки источника
+ * [SELECTED] (5.R3-2). Возвращает null, если выделения нет или оно внутри панели.
+ */
+export function getSelectionElement(): Element | null {
+  const selection = window.getSelection?.();
+  if (!selection || !selection.rangeCount) return null;
+  if (isInsideExtension(selection.anchorNode) || isInsideExtension(selection.focusNode)) return null;
+  const node = selection.getRangeAt(0).commonAncestorContainer;
+  const el = node.nodeType === Node.ELEMENT_NODE ? (node as Element) : node.parentElement;
+  return el && !isInsideExtension(el) ? el : null;
+}

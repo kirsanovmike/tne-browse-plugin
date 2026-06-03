@@ -21,6 +21,7 @@ import {
   findBestContentSource,
   getPageTitle,
   getSafeSelection,
+  getSelectionElement,
   readableFromElement,
 } from "./text-extract";
 import { extractMainContent } from "./readability";
@@ -62,6 +63,9 @@ export function buildStructuredContext(maxChars: number, scope: ScopeId = "all")
 
   if (selection && (scope === "all" || scope === "visible" || scope === "selection")) {
     sections.push({ tag: "SELECTED", header: "[SELECTED]", body: selection, priority: 1 });
+    // 5.R3-2: контейнер выделения → blockMap, чтобы [SELECTED] был кликабелен.
+    const selectionEl = getSelectionElement();
+    if (selectionEl) STATE.blockMap["SELECTED"] = selectionEl;
   }
 
   // [DOCUMENT] — текст загруженного PDF (Phase 3). Слот один, поэтому всегда D1.
@@ -113,7 +117,11 @@ export function buildStructuredContext(maxChars: number, scope: ScopeId = "all")
 
   if (scope === "all") {
     const mainContent = extractMainContent(source);
-    if (mainContent) sections.push({ tag: "MAIN", header: "[MAIN CONTENT]", body: mainContent, priority: 7 });
+    if (mainContent) {
+      sections.push({ tag: "MAIN", header: "[MAIN CONTENT]", body: mainContent, priority: 7 });
+      // 5.R3-2: blockId метки [MAIN CONTENT] = "MAIN CONTENT" (см. findSourceLabels).
+      STATE.blockMap["MAIN CONTENT"] = source;
+    }
 
     const interactive = collectInteractiveText();
     if (interactive) sections.push({ tag: "INTERFACE", header: "[INTERFACE]", body: interactive, priority: 8 });
