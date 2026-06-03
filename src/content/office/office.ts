@@ -107,11 +107,6 @@ export function renderTablesBar(): void {
     showPanelToast("На странице не найдено таблиц для экспорта.");
     return;
   }
-  // Кладём элементы в blockMap под T1..Tn, чтобы подсветка работала при любом scope.
-  lastTables.forEach((t, i) => {
-    STATE.blockMap[`T${i + 1}`] = t.element;
-  });
-
   bar.hidden = false;
   bar.innerHTML =
     `<div class="tne-tables-head">Таблицы страницы (${lastTables.length})</div>` +
@@ -119,7 +114,7 @@ export function renderTablesBar(): void {
       .map((t, i) => {
         const id = `T${i + 1}`;
         const preview = (t.matrix[0] || []).slice(0, 3).join(" · ").slice(0, 60) || "таблица";
-        return `<div class="tne-table-row" data-block="${id}">
+        return `<div class="tne-table-row" data-block="${id}" data-index="${i}">
           <span class="tne-table-label">[${id}] ${escapeHtml(preview)}</span>
           <button class="tne-small-button tne-table-export" data-index="${i}" type="button">↓ Excel</button>
         </div>`;
@@ -127,8 +122,14 @@ export function renderTablesBar(): void {
       .join("");
 
   bar.querySelectorAll<HTMLElement>(".tne-table-row").forEach((row) => {
-    const id = row.getAttribute("data-block");
-    if (id) row.addEventListener("mouseenter", () => highlightBlock(id));
+    const idx = Number(row.getAttribute("data-index"));
+    const table = lastTables[idx];
+    if (!table) return;
+    const id = `T${idx + 1}`;
+    row.addEventListener("mouseenter", () => {
+      STATE.blockMap[id] = table.element;
+      highlightBlock(id);
+    });
   });
   bar.querySelectorAll<HTMLButtonElement>(".tne-table-export").forEach((btn) => {
     btn.addEventListener("click", (e) => {
@@ -151,7 +152,7 @@ async function exportTableAt(index: number): Promise<void> {
     });
     downloadBlob(blob, buildTableFilename(STATE.page?.title || document.title, index + 1, new Date()));
   } catch (error) {
-    addAssistantMessage(`Не удалось сформировать .xlsx: ${(error as Error)?.message || error}`, { light: true });
+    showPanelToast(`Не удалось сформировать .xlsx: ${(error as Error)?.message || error}`);
   }
 }
 
