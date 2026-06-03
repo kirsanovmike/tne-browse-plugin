@@ -666,6 +666,15 @@
   margin-top: 9px;
 }
 
+/* 5.R3-4: короткая подпись-подсказка под режимами — чтобы назначение каждого
+   режима было понятно обычному пользователю без наведения на тултип. */
+.tne-scope-hint {
+  margin-top: 5px;
+  color: rgba(221, 227, 238, 0.6);
+  font-size: 10px;
+  line-height: 1.35;
+}
+
 .tne-scope-button {
   flex: 1 1 auto;
   padding: 5px 8px;
@@ -954,6 +963,10 @@
 
 #tne-page-chat-root[data-theme="light"] .tne-context-meta {
   color: rgba(40, 52, 72, 0.78);
+}
+
+#tne-page-chat-root[data-theme="light"] .tne-scope-hint {
+  color: rgba(40, 52, 72, 0.66);
 }
 
 #tne-page-chat-root[data-theme="light"] .tne-context-details summary {

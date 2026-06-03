@@ -301,6 +301,7 @@ function buildPanelUI(root: HTMLElement): void {
             <button class="tne-small-button" id="tne-refresh-context" type="button">Обновить</button>
           </div>
           <div class="tne-scope-row" id="tne-scope-row"></div>
+          <div class="tne-scope-hint">«Вся страница» — отвечаю по всему тексту; «Только выделенное» — лишь по выделенному фрагменту.</div>
           <div class="tne-context-previews">
             <details class="tne-context-details">
               <summary>Показать извлечённый текст</summary>
