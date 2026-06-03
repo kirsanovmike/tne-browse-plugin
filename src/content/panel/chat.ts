@@ -125,16 +125,6 @@ export async function sendQuestion(force = false): Promise<void> {
   }
 }
 
-/** Отправляет преднастроенную доработку предыдущего ответа (история едет в payload). */
-export function sendFollowUp(instruction: string): void {
-  if (STATE.isSending) return;
-  const input = $("#tne-chat-input") as HTMLTextAreaElement | null;
-  if (!input) return;
-  input.value = instruction;
-  input.style.height = "auto";
-  void sendQuestion();
-}
-
 /** Повторяет последний вопрос (без повторного гейта — он уже проверен). */
 function repeatLast(): void {
   if (STATE.isSending || !STATE.lastQuestion) return;
@@ -264,16 +254,10 @@ export function addAssistantMessage(text: string, options: AssistantOptions = {}
       return b;
     };
 
-    actions.append(
-      mkBtn("Продолжить", () =>
-        sendFollowUp("Продолжи предыдущий ответ с того места, где остановился.")
-      ),
-      mkBtn("Короче", () => sendFollowUp("Сделай предыдущий ответ короче, оставь только суть.")),
-      mkBtn("Подробнее", () =>
-        sendFollowUp("Раскрой предыдущий ответ подробнее, добавь деталей и пояснений.")
-      ),
-      mkBtn("Повторить", () => repeatLast())
-    );
+    // 5.R2-3: минимальный набор — «Повторить» (+ условная «Без картинок»);
+    // «Копировать ответ» добавляется ниже. «Подробнее/Короче/Продолжить» убраны:
+    // с историей диалога (5.R2-2) это обычные уточняющие вопросы.
+    actions.append(mkBtn("Повторить", () => repeatLast()));
 
     if (STATE.lastRequestHadImages) {
       actions.append(mkBtn("Без картинок", () => resendWithoutImages()));
