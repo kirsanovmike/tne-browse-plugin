@@ -301,14 +301,16 @@ function buildPanelUI(root: HTMLElement): void {
             <button class="tne-small-button" id="tne-refresh-context" type="button">Обновить</button>
           </div>
           <div class="tne-scope-row" id="tne-scope-row"></div>
-          <details class="tne-context-details">
-            <summary>Показать извлечённый текст</summary>
-            <pre id="tne-context-preview"></pre>
-          </details>
-          <details class="tne-context-details" id="tne-payload-details">
-            <summary>Показать, что уйдёт в модель (без токена)</summary>
-            <pre id="tne-payload-preview">Откройте этот блок, чтобы собрать тело запроса…</pre>
-          </details>
+          <div class="tne-context-previews">
+            <details class="tne-context-details">
+              <summary>Показать извлечённый текст</summary>
+              <pre id="tne-context-preview"></pre>
+            </details>
+            <details class="tne-context-details" id="tne-payload-details">
+              <summary>Показать, что уйдёт в модель (без токена)</summary>
+              <pre id="tne-payload-preview">Откройте этот блок, чтобы собрать тело запроса…</pre>
+            </details>
+          </div>
         </section>
 
         <div class="tne-warning-bar" id="tne-warning-bar" hidden>

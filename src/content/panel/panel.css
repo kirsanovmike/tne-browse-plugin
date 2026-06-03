@@ -285,10 +285,23 @@
   line-height: 1;
 }
 
-.tne-context-details {
+/* 5.R3-3: две кнопки-сворачивалки в один ряд; при раскрытии <pre> уходит на всю
+   ширину (открытый details занимает целую строку, второй переносится). */
+.tne-context-previews {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
   margin-top: 7px;
+}
+
+.tne-context-details {
+  flex: 0 0 auto;
   color: rgba(221, 227, 238, 0.74);
   font-size: 12px;
+}
+
+.tne-context-details[open] {
+  flex: 1 1 100%;
 }
 
 .tne-context-details summary {
