@@ -5,13 +5,14 @@
  */
 import { STATE, $ } from "../state";
 import { escapeHtml } from "../../shared/text";
-import { collectTables, type CollectedTable } from "../context/collectors";
-import { highlightBlock, showPanelToast } from "../render/source-highlight";
+import { collectTables, collectTablesLoose, type CollectedTable } from "../context/collectors";
+import { highlightBlock } from "../render/source-highlight";
 import { refreshContext } from "../context/refresh";
 import { addAssistantMessage } from "../panel/chat";
 import { clearPdf } from "../pdf/pdf-attachments";
 import { downloadBlob } from "../render/download";
-import { readDocx, readXlsx, matrixToWorkbookBuffer } from "./io";
+import { readDocx, readXlsx } from "./io";
+import { matrixToXlsxBuffer } from "./xlsx-write";
 import { sheetsToContextText } from "./xlsx-format";
 import { buildTableFilename } from "./table-filename";
 
@@ -85,9 +86,26 @@ export function renderDocBar(): void {
 }
 
 /**
+ * Собирает таблицы страницы: строгий проход, при пустом результате — фолбэк по
+ * сырому querySelectorAll (5.R2-5). Логирует число найденных для диагностики.
+ */
+function gatherTables(): CollectedTable[] {
+  let tables = collectTables();
+  if (!tables.length) {
+    const loose = collectTablesLoose();
+    if (loose.length) {
+      console.info(`[ТНЭ] collectTables: строгий проход 0, фолбэк нашёл ${loose.length}`);
+      tables = loose;
+    }
+  }
+  console.info(`[ТНЭ] экспорт таблиц: найдено ${tables.length}`);
+  return tables;
+}
+
+/**
  * HF4: клик по «Экспорт таблиц». Если бар открыт — закрывает. Если закрыт —
- * собирает таблицы: нет таблиц → тост; одна → сразу скачивает (без бара);
- * несколько → показывает компактный список (он сам закроется после экспорта).
+ * собирает таблицы: нет таблиц → сообщение в ленте; одна → сразу скачивает
+ * (без бара); несколько → компактный список (он сам закроется после экспорта).
  */
 export function toggleTablesBar(): void {
   if (tablesBarOpen) {
@@ -95,9 +113,9 @@ export function toggleTablesBar(): void {
     renderTablesBar();
     return;
   }
-  const tables = collectTables();
+  const tables = gatherTables();
   if (!tables.length) {
-    showPanelToast("На странице не найдено таблиц для экспорта.");
+    addAssistantMessage("На странице не найдено таблиц для экспорта.", { light: true });
     return;
   }
   lastTables = tables;
@@ -118,12 +136,12 @@ export function renderTablesBar(): void {
     bar.innerHTML = "";
     return;
   }
-  lastTables = collectTables();
+  lastTables = gatherTables();
   if (!lastTables.length) {
     tablesBarOpen = false;
     bar.hidden = true;
     bar.innerHTML = "";
-    showPanelToast("На странице не найдено таблиц для экспорта.");
+    addAssistantMessage("На странице не найдено таблиц для экспорта.", { light: true });
     return;
   }
   bar.hidden = false;
@@ -161,16 +179,18 @@ export function renderTablesBar(): void {
 async function exportTableAt(index: number): Promise<void> {
   const table = lastTables[index];
   if (!table || !table.matrix.length) {
-    showPanelToast("Таблица пуста — нечего экспортировать.");
+    addAssistantMessage("Таблица пуста — нечего экспортировать.", { light: true });
     return;
   }
   try {
-    const buffer = await matrixToWorkbookBuffer(table.matrix, "Лист1");
+    // 5.R2-5: собственный лёгкий генератор .xlsx (без ExcelJS — он «вис» в бандле).
+    const buffer = matrixToXlsxBuffer(table.matrix, "Лист1");
     const blob = new Blob([buffer], {
       type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     });
-    await downloadBlob(blob, buildTableFilename(STATE.page?.title || document.title, index + 1, new Date()));
-    showPanelToast("Таблица выгружена в .xlsx.");
+    const filename = buildTableFilename(STATE.page?.title || document.title, index + 1, new Date());
+    await downloadBlob(blob, filename);
+    addAssistantMessage(`Таблица выгружена в .xlsx: ${filename}`, { light: true });
     // HF4: после экспорта не оставляем список висеть.
     if (tablesBarOpen) {
       tablesBarOpen = false;

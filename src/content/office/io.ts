@@ -63,11 +63,3 @@ export async function readXlsx(file: File): Promise<SheetData[]> {
   });
   return sheets;
 }
-
-/** Матрица → буфер .xlsx одним листом (5.3). */
-export async function matrixToWorkbookBuffer(matrix: string[][], sheetName: string): Promise<ArrayBuffer> {
-  const wb = new ExcelJS.Workbook();
-  const ws = wb.addWorksheet(sheetName);
-  matrix.forEach((row) => ws.addRow(row));
-  return (await wb.xlsx.writeBuffer()) as ArrayBuffer;
-}

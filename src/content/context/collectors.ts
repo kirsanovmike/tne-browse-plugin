@@ -88,6 +88,28 @@ export function collectTables(): CollectedTable[] {
   return result;
 }
 
+/**
+ * 5.R2-5: фолбэк для экспорта таблиц. Если строгий collectTables() ничего не
+ * нашёл (эвристика видимости/размера отсекла реальную таблицу), собираем по
+ * сырому `document.querySelectorAll("table")`, отсекая лишь таблицы расширения.
+ */
+export function collectTablesLoose(): CollectedTable[] {
+  const tables = [...document.querySelectorAll("table")].filter((el) => !isInsideExtension(el));
+  const result: CollectedTable[] = [];
+  const seen = new Set<string>();
+  for (const table of tables) {
+    const matrix = tableToMatrix(table);
+    const markdown = matrixToMarkdown(matrix);
+    if (!markdown) continue;
+    const key = markdown.slice(0, 300).toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    result.push({ element: table, markdown, matrix });
+    if (result.length >= 8) break;
+  }
+  return result;
+}
+
 function tableToMatrix(table: Element): string[][] {
   const rows = [...table.querySelectorAll("tr")]
     .filter((tr) => isReadableElement(tr) && !isInsideExtension(tr))
