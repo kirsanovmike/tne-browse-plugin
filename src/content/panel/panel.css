@@ -14,6 +14,7 @@
   --tne-on-surface: #dde3ee;
   --tne-muted: #6a7f9a;
   --tne-muted-soft: #a8b5c7;
+  --tne-placeholder: rgba(221, 227, 238, 0.44);
   --tne-border: rgba(106, 127, 154, 0.26);
   --tne-border-strong: rgba(13, 148, 136, 0.48);
   --tne-logo: #6c84ff;
@@ -292,15 +293,22 @@
 
 .tne-context-details summary {
   display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
   cursor: pointer;
-  color: rgba(221, 227, 238, 0.72);
+  color: var(--tne-on-surface);
+  background: var(--tne-surface-2);
+  border: 1px solid var(--tne-border);
+  border-radius: 9px;
   font-size: 11px;
   line-height: 1.2;
   outline: none;
+  transition: border-color 0.16s ease, background 0.16s ease, color 0.16s ease;
 }
 
 .tne-context-details summary:hover {
   color: var(--tne-text);
+  border-color: var(--tne-border-strong);
 }
 
 .tne-context-details pre {
@@ -572,7 +580,7 @@
 }
 
 #tne-chat-input::placeholder {
-  color: rgba(221, 227, 238, 0.44);
+  color: var(--tne-placeholder);
 }
 
 #tne-chat-input:focus {
@@ -875,6 +883,7 @@
   --tne-on-surface: #283448;
   --tne-muted: #64748b;
   --tne-muted-soft: #51607a;
+  --tne-placeholder: #64748b;
   --tne-border: rgba(100, 116, 139, 0.28);
   --tne-border-strong: rgba(13, 148, 136, 0.42);
   --tne-logo: #4f46e5;
@@ -913,6 +922,25 @@
     radial-gradient(circle at 4% 0%, rgba(13, 148, 136, 0.12), transparent 36%),
     linear-gradient(135deg, rgba(13, 148, 136, 0.08), #ffffff);
   box-shadow: 0 12px 34px rgba(13, 148, 136, 0.08), 0 0 0 1px rgba(15, 23, 42, 0.02) inset;
+}
+
+/* Верхняя область карточки контекста: читаемый контраст на светлом фоне. */
+#tne-page-chat-root[data-theme="light"] .tne-context-label {
+  color: rgba(40, 52, 72, 0.66);
+}
+
+#tne-page-chat-root[data-theme="light"] .tne-context-title {
+  color: var(--tne-text);
+}
+
+#tne-page-chat-root[data-theme="light"] .tne-context-meta {
+  color: rgba(40, 52, 72, 0.78);
+}
+
+#tne-page-chat-root[data-theme="light"] .tne-context-details summary {
+  color: #283448;
+  background: var(--tne-surface-2);
+  border-color: var(--tne-border);
 }
 
 #tne-page-chat-root[data-theme="light"] .tne-context-details pre,
