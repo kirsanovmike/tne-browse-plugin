@@ -4,6 +4,7 @@
  * оркестратор поверх askWithSelectionPrompt (DOM, ручная проверка).
  */
 import { askWithSelectionPrompt } from "../panel/panel";
+import { translateSelectionInPlace } from "../translate/inplace";
 
 const SELECTION_PROMPTS: Record<string, string> = {
   explain: "Объясни выделенный фрагмент простыми словами.",
@@ -17,7 +18,12 @@ export function selectionPromptFor(actionId: string): string {
   return SELECTION_PROMPTS[actionId] ?? SELECTION_PROMPTS.explain!;
 }
 
-/** Запускает действие по выделению: открыть панель в режиме «Выделение» и спросить. */
+/** Запускает действие по выделению. translate-inplace — перевод на странице; остальное — в чат. */
 export async function runSelectionAction(actionId: string): Promise<void> {
+  // 5.6: перевод на месте — отдельная ветка, не открывает панель/чат.
+  if (actionId === "translate-inplace") {
+    await translateSelectionInPlace();
+    return;
+  }
   await askWithSelectionPrompt(selectionPromptFor(actionId));
 }

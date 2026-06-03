@@ -143,6 +143,41 @@ describe("buildBody with images", () => {
   });
 });
 
+describe("buildBody plain mode", () => {
+  it("uses the question verbatim as content, no prompt wrapping", () => {
+    const body = buildBody(
+      { question: "ВЕРНИ {\"field1\":\"x\"}", page: { text: "ctx" }, plain: true },
+      DEFAULT_SETTINGS
+    ) as { messages: Array<{ content: string }> };
+    expect(body.messages[0]!.content).toBe("ВЕРНИ {\"field1\":\"x\"}");
+  });
+
+  it("ignores page, role and history in plain mode", () => {
+    const body = buildBody(
+      {
+        question: "raw",
+        page: { text: "содержимое страницы" },
+        history: [{ role: "user", content: "история" }],
+        plain: true,
+      },
+      { ...DEFAULT_SETTINGS, roleId: "analyst" }
+    ) as { messages: Array<{ content: string }> };
+    const content = body.messages[0]!.content;
+    expect(content).toBe("raw");
+    expect(content).not.toContain("содержимое страницы");
+    expect(content).not.toContain("история");
+    expect(content).not.toContain("Контекст страницы");
+  });
+
+  it("never leaks the token in plain mode", () => {
+    const body = buildBody(
+      { question: "raw", page: {}, plain: true },
+      { ...DEFAULT_SETTINGS, token: "SECRET" }
+    );
+    expect(JSON.stringify(body)).not.toContain("SECRET");
+  });
+});
+
 describe("pickEndpoint", () => {
   it("uses vision endpoint for images when set", () => {
     const s = { ...DEFAULT_SETTINGS, endpoint: "MAIN", visionEndpoint: "VIS" };

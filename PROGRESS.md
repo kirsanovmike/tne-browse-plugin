@@ -658,8 +658,59 @@
   взаимное вытеснение PDF↔документ; подсветка таблицы при наведении) выполняет
   владелец (как в Phase 1–4).
 
-**Открытый пункт (P2, не делалось):** 5.4 заполнение форм, 5.5 сравнение вкладок,
-5.6 перевод in-place, 5.7 OCR.
+**Открытый пункт (P2, не делалось):** 5.5 сравнение вкладок, 5.7 OCR (🚫 решено не
+делать). 5.4 и 5.6 закрыты — см. ниже.
+
+## PHASE 5 — P2: заполнение форм (5.4) + перевод на месте (5.6)
+
+Дизайн: `docs/superpowers/specs/2026-06-03-phase5-formfill-translate-design.md`
+(каталог `docs/` в .gitignore — спека только на диске). Ветка
+`phase5-formfill-translate`. Чистые модули — TDD/Vitest; DOM — ручная проверка (§6).
+Контракт сообщений расширен ровно одним булевым флагом `plain` в `AskModelPayload`;
+новых типов сообщений и прав браузера НЕ вводилось.
+
+**Общий примитив «plain».** `AskModelPayload.plain?: boolean`; в `buildBody`
+(`llm-client.ts`) при `plain` `content` сообщения = `question` дословно (без
+`buildPrompt`-обвязки, роли, истории, контекста). Токен по-прежнему только в
+заголовках (тест «не утекает в plain»). `src/content/chat/plain-request.ts`
+`requestPlainAnswer(prompt)` — одноразовый запрос, не зависит от панели/shadow
+(нужно переводу при закрытой панели).
+
+- **[5.4] Заполнение форм по описанию.** Иконка «Заполнить форму» (`FORM_FILL_ICON`)
+  в нижней панели инструментов → `startFormFill()` рисует самодостаточную карточку в
+  ленте чата: выбор формы (если их несколько; наведение подсвечивает форму) →
+  textarea с описанием → `buildFillPrompt` (+manifest) → `requestPlainAnswer` →
+  `parseFillResponse` → **предпросмотр** «метка → значение» с чекбоксами →
+  «Подставить». Подстановка `apply-fill.ts` — нативные сеттеры value + dispatch
+  `input`/`change` (React/Vue), select/checkbox/radio по совпадению варианта, кратко
+  подсвечивает поле. **Авто-сабмита нет.** Приватность: manifest несёт только
+  метки/типы/варианты (НЕ текущие значения); password/hidden никогда не читаются и не
+  заполняются. Чистые: `field-manifest.ts` (manifest + промпт), `parse-fill.ts`
+  (извлечение первого сбалансированного `{…}`, фильтр по известным id, скаляры).
+  Файлы: new `src/content/forms/{fillable,field-manifest,parse-fill,apply-fill,
+  form-fill}.ts`; правки `panel/{icons,panel}.ts`, `panel.css` (карточка `.tne-fill-*`
+  на переменных темы — обе темы), `context/collectors.ts` (экспорт `getFieldLabel`).
+- **[5.6] Перевод на месте.** Пятое действие выделения
+  `{id:"translate-inplace", label:"Перевести на месте"}` в `SELECTION_ACTION_META` —
+  автоматически в плавающей кнопке и контекстном меню. `runSelectionAction` ветвит:
+  `translate-inplace` → `translateSelectionInPlace()` (не открывает чат). Захват
+  Range, замена выделения на span-плейсхолдер «⏳ перевод…», `requestPlainAnswer`
+  (`buildTranslatePrompt` + авто-язык `detectTargetLang`: кириллица→en, иначе→ru),
+  затем span показывает перевод (`data-tne-original`, пунктир, клик → откат к
+  оригиналу). Гейты: whitelist (`isHostAllowed`), пустое/длинное (>5000) выделение →
+  страничный тост. Span — только inline-стили (page DOM, вне shadow root). Чистые:
+  `lang-detect.ts`, `translate-prompt.ts`. Файлы: new `src/content/translate/
+  {lang-detect,translate-prompt,inplace}.ts`; правки `shared/selection-actions.ts`,
+  `content/selection/actions.ts`.
+
+- **Проверка:** `tsc --noEmit` (strict) — зелёный; `vitest run` — **198/198**
+  (176 прежних + 22 новых: llm-client plain 3, field-manifest 6, parse-fill 7,
+  lang-detect 5, translate-prompt 3 — минус перекрытия счёта файлов); `npm run build`
+  собирает `dist/firefox` и `dist/chrome` (266 модулей), новых прав/типов сообщений
+  нет. Ручная проверка в Firefox+Chromium (кнопка «Заполнить форму» → описание →
+  предпросмотр → подстановка без сабмита, исключение password/hidden; перевод на
+  месте + откат из плавающей кнопки и контекстного меню; неактивность вне whitelist)
+  — за владельцем, как в Phase 1–4.
 
 ## Хотфикс-блок Phase 5 (5.HF1–5.HF4)
 

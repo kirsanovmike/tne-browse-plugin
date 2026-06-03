@@ -18,6 +18,7 @@ export interface PromptInput {
   page?: unknown;
   images?: unknown;
   history?: unknown;
+  plain?: unknown;
 }
 
 // 5.R2-2: в промпт едут только последние обмены (2 пары user/assistant),
@@ -137,6 +138,10 @@ export function buildBody(
   const images = Array.isArray(payload.images)
     ? payload.images.filter((s): s is string => typeof s === "string" && s.length > 0).slice(0, MAX_IMAGES)
     : [];
+  // 5.4/5.6: «plain» режим — content = вопрос дословно, без обвязки/роли/истории/контекста.
+  const content = payload.plain
+    ? String(payload.question ?? "")
+    : buildPrompt(payload, resolveRolePrompt(settings.roleId));
   return {
     messages: [
       {
@@ -144,7 +149,7 @@ export function buildBody(
         role: 1,
         mode: settings.mode || "llm",
         modelId: Number(settings.modelId) || 5,
-        content: buildPrompt(payload, resolveRolePrompt(settings.roleId)),
+        content,
         files: images.length ? images : null,
         created: now,
         is_error: false,

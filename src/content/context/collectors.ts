@@ -209,7 +209,7 @@ export function describeField(el: Element): string {
   });
 }
 
-function getFieldLabel(el: Element): string {
+export function getFieldLabel(el: Element): string {
   const id = el.id;
   const explicit = id ? document.querySelector(`label[for="${cssEscape(id)}"]`) : null;
   const wrapping = el.closest("label");

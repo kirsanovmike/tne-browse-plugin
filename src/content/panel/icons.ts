@@ -78,3 +78,11 @@ export const TABLE_EXPORT_ICON = `
       <path d="M3 8.5h13M3 13h13M9.5 4v13" fill="none" stroke="currentColor" stroke-width="1.3"/>
       <path d="M19 13v6m0 0-2.2-2.2M19 19l2.2-2.2" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
     </svg>`;
+
+// 5.4: «Заполнить форму по описанию» — бланк с пером.
+export const FORM_FILL_ICON = `
+    <svg class="tne-action-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <rect x="4" y="3" width="13" height="18" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.6"/>
+      <path d="M7 8h7M7 11.5h7M7 15h4" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+      <path d="M19.6 13.4 21 14.8l-4 4-1.7.4.4-1.7 3.9-4.1Z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+    </svg>`;

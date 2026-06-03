@@ -34,6 +34,7 @@ import {
   ATTACH_ICON,
   EXPORT_ICON,
   TABLE_EXPORT_ICON,
+  FORM_FILL_ICON,
 } from "./icons";
 import { initFontControls, initThemeControl, initResizeHandle, toggleTheme } from "./controls";
 import { renderWelcomeMessage, clearChat, sendQuestion, addAssistantMessage } from "./chat";
@@ -41,6 +42,7 @@ import { exportDialog } from "../chat/export-md";
 import { initAttachments } from "../vision/attachments";
 import { initPdf, setDetectedTabPdf } from "../pdf/pdf-attachments";
 import { initOffice } from "../office/office";
+import { startFormFill } from "../forms/form-fill";
 import { refreshContext, updatePayloadPreview } from "../context/refresh";
 import { startUrlWatcher, startDomWatcher } from "../spa-keeper";
 import { getSafeSelection } from "../context/text-extract";
@@ -336,6 +338,7 @@ function buildPanelUI(root: HTMLElement): void {
             <button class="tne-attach-button" id="tne-attach-region" type="button" title="Снимок области рамкой" aria-label="Снимок области рамкой">${REGION_ICON}</button>
             <button class="tne-attach-button" id="tne-attach-file" type="button" title="Приложить изображение или PDF" aria-label="Приложить изображение или PDF">${ATTACH_ICON}</button>
             <button class="tne-attach-button" id="tne-tables-export" type="button" title="Экспорт таблиц страницы в Excel" aria-label="Экспорт таблиц в Excel">${TABLE_EXPORT_ICON}</button>
+            <button class="tne-attach-button" id="tne-form-fill" type="button" title="Заполнить форму по описанию" aria-label="Заполнить форму по описанию">${FORM_FILL_ICON}</button>
             <input id="tne-attach-input" type="file" accept="image/*,application/pdf" multiple hidden />
           </div>
         </div>
@@ -367,6 +370,7 @@ function buildPanelUI(root: HTMLElement): void {
   root.querySelector("#tne-chat-clear")?.addEventListener("click", () => clearChat());
   root.querySelector("#tne-refresh-context")?.addEventListener("click", () => refreshContext(true, "button"));
   root.querySelector("#tne-chat-send")?.addEventListener("click", () => sendQuestion());
+  root.querySelector("#tne-form-fill")?.addEventListener("click", () => startFormFill());
 
   const payloadDetails = root.querySelector("#tne-payload-details") as HTMLDetailsElement | null;
   payloadDetails?.addEventListener("toggle", () => {

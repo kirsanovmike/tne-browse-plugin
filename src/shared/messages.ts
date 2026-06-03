@@ -16,6 +16,12 @@ export interface AskModelPayload {
   page: unknown;
   history?: ChatHistoryItem[];
   images?: string[];
+  /**
+   * «Сырой» режим (5.4/5.6): `content` сообщения = `question` дословно, без
+   * `buildPrompt`-обвязки, роли, истории и контекста страницы. Для запросов,
+   * где модель должна вернуть ровно то, что просят (JSON-структура / только перевод).
+   */
+  plain?: boolean;
 }
 
 export interface BuildPayloadPayload {
