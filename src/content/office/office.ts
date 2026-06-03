@@ -158,6 +158,8 @@ async function exportTableAt(index: number): Promise<void> {
 
 /** Привязывает кнопки документа и экспорта таблиц. */
 export function initOffice(root: HTMLElement): void {
+  tablesBarOpen = false;
+  lastTables = [];
   const input = root.querySelector("#tne-doc-input") as HTMLInputElement | null;
   root.querySelector("#tne-attach-doc")?.addEventListener("click", () => input?.click());
   input?.addEventListener("change", () => {

@@ -54,8 +54,10 @@ export async function readXlsx(file: File): Promise<SheetData[]> {
       const cells: string[] = [];
       for (let c = 1; c <= colCount; c++) cells.push(cellToText(row.getCell(c).value));
       while (cells.length && cells[cells.length - 1] === "") cells.pop();
-      matrix.push(cells);
-      rows++;
+      if (cells.length) {
+        matrix.push(cells);
+        rows++;
+      }
     });
     sheets.push({ name: ws.name, matrix });
   });
