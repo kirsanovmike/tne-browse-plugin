@@ -595,3 +595,68 @@
   `npm run build` собирает `dist/firefox` и `dist/chrome` (MV3). Ручную проверку в
   Firefox+Chromium (кнопка экспорта после диалога → корректный .md с метаданными;
   тост на пустом диалоге) выполняет владелец (как в Phase 1–4).
+
+## PHASE 5 — Расширенные документы и инструменты (P1 5.1–5.3)
+
+Дизайн: `docs/superpowers/specs/2026-06-03-phase5-office-p1-design.md`; план:
+`docs/superpowers/plans/2026-06-03-phase5-office-p1.md`. Выполнено subagent-driven
+(имплементер + спец-ревью + код-ревью на задачу) на ветке `phase5-office`. Все P1
+(5.1–5.3). Контракт сообщений (`src/shared/messages.ts`) и манифест
+(`manifest.config.ts`) НЕ менялись (проверено `git diff` vs master) — всё в content,
+без обращений к фону и без новых прав.
+
+**Ключевое решение:** один общий слот документа. DOCX/XLSX живут в новом
+`STATE.docFile` (`{kind, name, documentText}`), который **взаимоисключается** с
+`STATE.pdf`: загрузка office-дока зовёт `clearPdf()`, загрузка PDF (`openPdf`) чистит
+`docFile`. Оба рисуются как единственный блок `[DOCUMENT D1]`
+(`build-context.ts`: `STATE.pdf?.documentText || STATE.docFile?.documentText`).
+Библиотеки — из npm, бандлятся Vite локально (без CDN): `mammoth` (DOCX), `exceljs`
+(чтение/запись XLSX; выбран вместо SheetJS 0.18.5 — у того CVE в пути парсинга).
+
+- **Рефактор matrix (под 5.3).** `|`-экранирование перенесено в чистую
+  `matrixToMarkdown` (`tables-to-md.ts`), а из коллектора выделена
+  format-нейтральная `tableToMatrix` (`collectors.ts`); `CollectedTable` получил
+  поле `matrix: string[][]`. Это убрало двойное экранирование и дало сырую матрицу
+  для экспорта.
+- **[5.1] DOCX-чтение (Mammoth).** `office/io.ts:readDocx` →
+  `mammoth.extractRawText({arrayBuffer})`; чистая `office/docx-text.ts:normalizeDocxText`
+  (CRLF→LF, трим хвостов, схлопывание пустых строк) под Vitest. Текст → `[DOCUMENT D1]`.
+- **[5.2] XLSX-чтение (ExcelJS).** `office/io.ts:readXlsx` (листы → матрицы, кап 500×50,
+  `cellToText` приводит string/number/bool/Date/richText/hyperlink/formula-result/
+  sharedFormula/error к тексту); чистая `office/xlsx-format.ts:sheetsToContextText`
+  (каждый лист → `[SHEET «имя»]` + `matrixToMarkdown`) под Vitest → `[DOCUMENT D1]`.
+- **[5.3] Экспорт таблиц в .xlsx (ExcelJS).** `office/io.ts:matrixToWorkbookBuffer`
+  (addWorksheet+addRows→writeBuffer); чистая `office/table-filename.ts:buildTableFilename`
+  (`tne-table-<slug>-<N>-<стамп>.xlsx`) под Vitest. UI — бар `#tne-tables-bar`
+  (`office.ts:renderTablesBar`): из `collectTables()` рисует список `[TABLE Tn]` с
+  кнопкой «↓ Excel» у каждой; наведение → `highlightBlock` (элемент переназначается в
+  `STATE.blockMap` в обработчике `mouseenter` — устойчиво к сбросу blockMap при
+  `refreshContext`). Пустой список → тост.
+- **Общий UI документа.** Кнопка «Документ» (`#tne-attach-doc`, `DOC_ICON`) +
+  `#tne-doc-input` (`accept=.docx,.xlsx` + OOXML-MIME) с роутингом по расширению;
+  кнопка «Таблицы → Excel» (`#tne-tables-export`, `TABLE_EXPORT_ICON`); бар
+  `#tne-doc-bar` (имя/тип/«N симв.»/«листов: N»/×). `office.ts:initOffice`
+  привязан рядом с `initPdf` в `panel.ts`. Скачивание вынесено в общий
+  `render/download.ts:downloadBlob` (DRY с `export-md.ts`).
+- **Файлы:** new `src/content/office/{docx-text,xlsx-format,table-filename,io,office}.ts`,
+  `src/content/render/download.ts`; правки `src/content/context/{tables-to-md,
+  collectors,build-context}.ts`, `src/content/state.ts` (`DocFileState`/`docFile`),
+  `src/content/pdf/pdf-attachments.ts` (`openPdf` чистит docFile),
+  `src/content/panel/{icons,panel,panel.css}.ts`, `src/content/chat/export-md.ts`
+  (→ `downloadBlob`), `package.json` (exceljs, mammoth). Тесты:
+  `tests/content/office/{docx-text,xlsx-format,table-filename}.test.ts` +
+  `tests/content/context/tables-to-md.test.ts` (+1 экранирование).
+- **Проверка:** `npm run ci` зелёный — `tsc --noEmit` (strict) чист; `vitest run` —
+  **175/175** (163 прежних + 12 новых: docx-text 4 + xlsx-format 4 + table-filename 3 +
+  tables-to-md 1); `npm run build` собирает `dist/firefox` и `dist/chrome` (MV3);
+  CDN-ссылок в `dist/` нет (`grep`); `messages.ts`/`manifest.config.ts` не изменены.
+  io.ts (Mammoth/ExcelJS) и office.ts (DOM/UI) — без юнит-тестов (§6), ручная проверка.
+  Каждая задача прошла спец-ревью + код-ревью (исправлены: shared-formula→"" в
+  cellToText; устойчивость подсветки к сбросу blockMap; тост вместо чат-сообщения на
+  ошибке экспорта). Ручную проверку в Firefox+Chromium (загрузка .docx → текст в
+  предпросмотре; .xlsx → листы/значения; экспорт таблицы → корректный .xlsx;
+  взаимное вытеснение PDF↔документ; подсветка таблицы при наведении) выполняет
+  владелец (как в Phase 1–4).
+
+**Открытый пункт (P2, не делалось):** 5.4 заполнение форм, 5.5 сравнение вкладок,
+5.6 перевод in-place, 5.7 OCR.
