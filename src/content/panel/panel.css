@@ -1061,6 +1061,22 @@
   padding: 6px 14px 0;
 }
 
+/* 5.R2-6: бары/лента вложений объявлены display:flex и перебивали UA-правило
+   [hidden] → пустые box'ы оставались «полосками». Прячем их по-настоящему. */
+.tne-attach-bar [hidden] {
+  display: none;
+}
+
+/* Когда нет ни одного активного бара и лента вложений пуста — над строкой
+   иконок не должно быть ни отступа, ни зазора (только сам ряд кнопок). */
+.tne-attach-bar:not(:has(.tne-pdf-bar:not([hidden]),
+    .tne-doc-bar:not([hidden]),
+    .tne-tables-bar:not([hidden]),
+    .tne-attachments:not([hidden]))) {
+  padding-top: 0;
+  gap: 0;
+}
+
 .tne-attachments {
   display: flex;
   flex-wrap: wrap;
