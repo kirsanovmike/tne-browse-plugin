@@ -24,7 +24,7 @@ export default defineConfig(({ mode }) => ({
       // M3: entry — src/content/index.ts; libs (readability/marked/highlight.js)
       // из npm бандлятся внутрь, CSS инлайнится через ?inline. Вывод:
       // dist/firefox/src/content/index.js (см. injector.ts).
-      additionalInputs: ["src/content/index.ts"],
+      additionalInputs: ["src/content/index.ts", "src/sandbox/pdf-sandbox.html"],
       // M0 строит артефакт; авто-запуск Firefox через web-ext не нужен.
       disableAutoLaunch: true,
     }),
