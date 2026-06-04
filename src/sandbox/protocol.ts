@@ -61,7 +61,11 @@ export type SandboxRequest = OpenRequest | PagesRequest;
 export type SandboxReply = OpenedReply | ProgressReply | ResultReply | ErrorReply | ReadyReply;
 
 let counter = 0;
-/** Уникальный id запроса в пределах сессии страницы. */
+/**
+ * Уникальный id запроса в пределах сессии страницы.
+ * Генерируется ТОЛЬКО на стороне content; sandbox лишь возвращает reqId обратно
+ * в ответах — поэтому per-module counter не порождает коллизий между фреймами.
+ */
 export function makeReqId(): string {
   counter += 1;
   return `pdfreq-${Date.now().toString(36)}-${counter}`;
