@@ -14,7 +14,6 @@ type Pending = {
   resolve: (r: ResultReply | { numPages: number }) => void;
   reject: (e: Error) => void;
   onProgress?: (stage: "text" | "render", index: number, total: number) => void;
-  kind: "open" | "pages";
 };
 const pending = new Map<string, Pending>();
 
@@ -38,6 +37,13 @@ function onMessage(ev: MessageEvent): void {
   }
 }
 
+function teardown(): void {
+  window.removeEventListener("message", onMessage);
+  iframe?.remove();
+  iframe = null;
+  readyPromise = null;
+}
+
 /** Создаёт iframe (один раз) и ждёт TNE_PDF_SANDBOX_READY. */
 function ensureSandbox(host: HTMLElement): Promise<void> {
   if (readyPromise && iframe?.isConnected) return readyPromise;
@@ -46,38 +52,50 @@ function ensureSandbox(host: HTMLElement): Promise<void> {
     frame.src = browser.runtime.getURL("src/sandbox/pdf-sandbox.html");
     frame.style.cssText = "position:absolute;width:0;height:0;border:0;visibility:hidden;";
     frame.setAttribute("aria-hidden", "true");
-    const ready = (ev: MessageEvent) => {
+
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const cleanupReady = (): void => {
+      window.removeEventListener("message", ready);
+      if (timer !== undefined) clearTimeout(timer);
+    };
+    const fail = (message: string): void => {
+      cleanupReady();
+      teardown();
+      reject(new Error(message));
+    };
+    const ready = (ev: MessageEvent): void => {
       const m = ev.data as SandboxReply | undefined;
       if (m?.type === "TNE_PDF_SANDBOX_READY" && ev.source === frame.contentWindow) {
-        window.removeEventListener("message", ready);
+        cleanupReady();
         resolve();
       }
     };
+
     window.addEventListener("message", ready);
-    frame.addEventListener("error", () => {
-      window.removeEventListener("message", ready);
-      reject(new Error("Не удалось загрузить служебную страницу PDF."));
-    });
+    frame.addEventListener("error", () => fail("Не удалось загрузить служебную страницу PDF."));
     window.addEventListener("message", onMessage);
     host.appendChild(frame);
     iframe = frame;
     // Страховка от вечного ожидания готовности.
-    setTimeout(() => reject(new Error("Служебная страница PDF не ответила (таймаут готовности).")), 10000);
+    timer = setTimeout(() => fail("Служебная страница PDF не ответила (таймаут готовности)."), 10000);
   });
   return readyPromise;
 }
 
 function post(msg: object, transfer: Transferable[] = []): void {
+  // targetOrigin "*" безопасно: получатель — наш sandbox-iframe, секретов нет.
   iframe?.contentWindow?.postMessage(msg, "*", transfer);
 }
 
-/** Открывает PDF в sandbox. host — элемент, в который вешается iframe (хост панели). */
+/**
+ * Открывает PDF в sandbox. host — элемент, в который вешается iframe (хост панели).
+ * ВНИМАНИЕ: не вызывать конкурентно — sandbox держит один документ; вызовы сериализует оркестратор.
+ */
 export async function openPdf(host: HTMLElement, buffer: ArrayBuffer): Promise<number> {
   await ensureSandbox(host);
   const reqId = makeReqId();
   return new Promise<number>((resolve, reject) => {
     pending.set(reqId, {
-      kind: "open",
       resolve: (r) => resolve((r as { numPages: number }).numPages),
       reject,
     });
@@ -92,10 +110,13 @@ export function processPages(
   scale: number,
   onProgress?: (stage: "text" | "render", index: number, total: number) => void
 ): Promise<{ texts: string[]; images: { page: number; dataUrl: string }[] }> {
-  const reqId = makeReqId();
   return new Promise((resolve, reject) => {
+    if (!iframe?.isConnected) {
+      reject(new Error("PDF ещё не открыт."));
+      return;
+    }
+    const reqId = makeReqId();
     pending.set(reqId, {
-      kind: "pages",
       resolve: (r) => {
         const res = r as ResultReply;
         resolve({ texts: res.texts, images: res.images });
@@ -109,9 +130,7 @@ export function processPages(
 
 /** Полностью убирает sandbox (вызов из clearPdf). */
 export function destroySandbox(): void {
-  window.removeEventListener("message", onMessage);
+  pending.forEach((p) => p.reject(new Error("Обработка PDF отменена.")));
   pending.clear();
-  iframe?.remove();
-  iframe = null;
-  readyPromise = null;
+  teardown();
 }
