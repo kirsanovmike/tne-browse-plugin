@@ -1,14 +1,14 @@
 /**
- * Оркестратор PDF (Phase 3): загрузка файла / из вкладки, выбор страниц,
+ * Оркестратор PDF (Phase 3 / Phase 7): загрузка файла / из вкладки, выбор страниц,
  * извлечение текста в [DOCUMENT], рендер страниц в картинки-вложения (для сканов
  * или по тогглу), прогресс, очистка. UI — бар над лентой вложений. Ручная проверка.
+ *
+ * PHASE 7: PDF.js перенесён в sandbox-iframe; content-скрипт общается через
+ * pdf-sandbox-client.ts, не импортирует pdfjs-dist напрямую (Xray-барьер Firefox).
  */
-import type { PDFDocumentProxy } from "pdfjs-dist";
 import { STATE, $, type PdfState } from "../state";
-import { MAX_IMAGES, PDF_DEFAULT_PAGES } from "../../shared/limits";
-import { loadPdfDocument, withTimeout } from "./pdf-loader";
-import { extractPageText } from "./pdf-text";
-import { renderPageToDataUrl } from "./pdf-render";
+import { MAX_IMAGES, PDF_DEFAULT_PAGES, PDF_RENDER_SCALE } from "../../shared/limits";
+import { openPdf as sandboxOpen, processPages, destroySandbox } from "./pdf-sandbox-client";
 import { parsePageRange } from "./page-range";
 import { looksLikeScan } from "./scan-detect";
 import { compressDataUrl } from "../vision/image-compressor";
@@ -17,13 +17,15 @@ import { addAssistantMessage } from "../panel/chat";
 import { refreshContext } from "../context/refresh";
 import { escapeHtml } from "../../shared/text";
 
-// PDFDocumentProxy не сериализуется → держим вне STATE, на уровне модуля.
-let currentDoc: PDFDocumentProxy | null = null;
-// 5.R2-9: таймауты на шаги, чтобы статус не «висел» вечно при сбое PDF.js.
-const PAGE_TEXT_TIMEOUT_MS = 15000;
-const PAGE_RENDER_TIMEOUT_MS = 20000;
+// PHASE 7 — документ живёт в sandbox; в content держим только факт открытия.
+let pdfOpen = false;
 // URL открытого во вкладке PDF, обнаруженный автодетектом (Task 12).
 let detectedTabPdfUrl: string | null = null;
+
+/** Контейнер для скрытого служебного iframe sandbox — гарантированно отрисованный узел страницы. */
+function getPanelHost(): HTMLElement | null {
+  return document.body ?? document.documentElement;
+}
 
 function makeId(): string {
   return `pdf-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
@@ -37,7 +39,8 @@ function currentPageFromHash(): number | null {
 
 /** Полностью сбрасывает PDF-состояние и его вложения. */
 export function clearPdf(): void {
-  currentDoc = null;
+  pdfOpen = false;
+  destroySandbox();
   STATE.pdf = null;
   STATE.attachments = STATE.attachments.filter((a) => a.source !== "pdf");
   renderAttachments();
@@ -72,16 +75,18 @@ export async function loadPdfFromTab(): Promise<void> {
 }
 
 async function openPdf(buf: ArrayBuffer, name: string, currentPage: number | null): Promise<void> {
-  currentDoc = await loadPdfDocument(buf);
+  const host = getPanelHost();
+  if (!host) throw new Error("Панель не готова для обработки PDF.");
+  const numPages = await sandboxOpen(host, buf); // buf уходит transferable в sandbox
+  pdfOpen = true;
   STATE.pdf = {
     name,
-    numPages: currentDoc.numPages,
+    numPages,
     selectionMode: currentPage ? "current" : "first5",
     selectionInput: "",
     pages: [],
     currentPage,
     hasTextLayer: true,
-    // 5.R2-9: по умолчанию прикладываем страницы картинками (текст + изображения).
     withImages: true,
     documentText: "",
   };
@@ -93,8 +98,7 @@ async function openPdf(buf: ArrayBuffer, name: string, currentPage: number | nul
 /** Читает выбор страниц из UI/состояния, извлекает текст и (при необходимости) картинки. */
 export async function applyPdfSelection(): Promise<void> {
   const pdf = STATE.pdf;
-  const doc = currentDoc;
-  if (!pdf || !doc) return;
+  if (!pdf || !pdfOpen) return;
 
   const pages = resolveSelectedPages(pdf);
   if (pages.length === 0) {
@@ -104,50 +108,48 @@ export async function applyPdfSelection(): Promise<void> {
   pdf.pages = pages;
 
   try {
-    // 1) Текстовый слой выбранных страниц (с таймаутом на страницу).
     setPdfStatus("Извлекаю текст…");
-    const pageTexts: string[] = [];
-    for (const p of pages) {
-      pageTexts.push(
-        await withTimeout(
-          extractPageText(doc, p),
-          PAGE_TEXT_TIMEOUT_MS,
-          `PDF.js не ответил при извлечении текста страницы ${p}.`
-        )
+    // Один проход в sandbox: текст всех страниц + (если тоггл включён) их картинки.
+    const first = await processPages(pages, pdf.withImages, PDF_RENDER_SCALE, (stage, index, total) => {
+      setPdfStatus(
+        stage === "text"
+          ? `Извлекаю текст… (${index + 1}/${total})`
+          : `Рендер страницы ${index + 1} из ${total}…`
       );
-    }
-    pdf.documentText = pages
-      .map((p, i) => `[PDF P${p}]\n${pageTexts[i] || "(текст не извлечён)"}`)
-      .join("\n\n");
-    pdf.hasTextLayer = !looksLikeScan(pageTexts);
+    });
 
-    // 2) Страницы всегда прикладываем картинками (до лимита), если тоггл включён
-    //    или это скан без текстового слоя. По умолчанию тоггл включён (5.R2-9).
+    pdf.documentText = pages
+      .map((p, i) => `[PDF P${p}]\n${first.texts[i] || "(текст не извлечён)"}`)
+      .join("\n\n");
+    pdf.hasTextLayer = !looksLikeScan(first.texts);
+
+    // Скан без текстового слоя, но тоггл картинок был выключен → дорендерим картинки.
+    let pageImages = first.images;
+    if (!pdf.withImages && !pdf.hasTextLayer) {
+      const extra = await processPages(pages, true, PDF_RENDER_SCALE, (stage, index, total) => {
+        setPdfStatus(`Рендер страницы ${index + 1} из ${total}…`);
+      });
+      pageImages = extra.images;
+    }
+
+    // Приложить картинки до лимита MAX_IMAGES.
     const wantImages = pdf.withImages || !pdf.hasTextLayer;
     STATE.attachments = STATE.attachments.filter((a) => a.source !== "pdf");
-    const budget = wantImages ? Math.max(0, MAX_IMAGES - STATE.attachments.length) : 0;
-    if (wantImages && budget > 0) {
-      const toRender = pages.slice(0, budget);
-      for (let i = 0; i < toRender.length; i++) {
-        const p = toRender[i]!;
-        setPdfStatus(`Рендер страницы ${i + 1} из ${toRender.length}…`);
-        const dataUrl = await withTimeout(
-          renderPageToDataUrl(doc, p),
-          PAGE_RENDER_TIMEOUT_MS,
-          `PDF.js не ответил при отрисовке страницы ${p}.`
-        );
+    if (wantImages && pageImages.length > 0) {
+      const budget = Math.max(0, MAX_IMAGES - STATE.attachments.length);
+      for (const { page, dataUrl } of pageImages.slice(0, budget)) {
         const img = await compressDataUrl(dataUrl);
-        const ok = addAttachment({ id: makeId(), dataUrl: img.dataUrl, base64: img.base64, source: "pdf", bytes: img.bytes, page: p });
+        const ok = addAttachment({ id: makeId(), dataUrl: img.dataUrl, base64: img.base64, source: "pdf", bytes: img.bytes, page });
         if (!ok) break;
       }
     }
 
-    // 3) Обновить контекст (вставит [DOCUMENT]) и UI.
+    // Обновить контекст (вставит [DOCUMENT]) и UI.
     await refreshContext(false, "pdf");
     renderAttachments();
     renderPdfBar();
 
-    // 4) Сообщить пользователю, что уйдёт (по фактически приложенным страницам).
+    // Сообщить пользователю по фактически приложенным страницам.
     const sent = STATE.attachments
       .filter((a) => a.source === "pdf")
       .map((a) => a.page)
@@ -162,7 +164,6 @@ export async function applyPdfSelection(): Promise<void> {
       setPdfStatus(`Готово: текст + изображения стр. ${sent.join(", ")}.`);
     }
   } catch (error) {
-    // 5.R2-9: явная ошибка вместо зависшего «Извлекаю текст…».
     renderPdfBar();
     setPdfStatus("Ошибка обработки PDF — см. сообщение в чате.");
     addAssistantMessage(
