@@ -74,6 +74,8 @@ function ensureSandbox(host: HTMLElement): Promise<void> {
     window.addEventListener("message", ready);
     frame.addEventListener("error", () => fail("Не удалось загрузить служебную страницу PDF."));
     window.addEventListener("message", onMessage);
+    // Если CSP страницы (frame-src) заблокирует moz-extension://-iframe, сработает
+    // обработчик "error" → fail() → понятная ошибка пользователю, без зависания.
     host.appendChild(frame);
     iframe = frame;
     // Страховка от вечного ожидания готовности.

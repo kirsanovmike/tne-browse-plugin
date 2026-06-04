@@ -126,6 +126,8 @@ export async function applyPdfSelection(): Promise<void> {
     // Скан без текстового слоя, но тоггл картинок был выключен → дорендерим картинки.
     let pageImages = first.images;
     if (!pdf.withImages && !pdf.hasTextLayer) {
+      // Sandbox всё равно извлекает текст в этом проходе (нам нужны только картинки),
+      // но для сканов текстовый слой почти пуст — накладные расходы малы. Принимаем.
       const extra = await processPages(pages, true, PDF_RENDER_SCALE, (stage, index, total) => {
         setPdfStatus(`Рендер страницы ${index + 1} из ${total}…`);
       });
@@ -164,6 +166,12 @@ export async function applyPdfSelection(): Promise<void> {
       setPdfStatus(`Готово: текст + изображения стр. ${sent.join(", ")}.`);
     }
   } catch (error) {
+    // PHASE 7: если PDF убрали (clearPdf) во время обработки, sandbox отклоняет
+    // запросы — для пользователя это отмена, а не ошибка. Молча выходим.
+    if (!STATE.pdf || !pdfOpen) {
+      renderPdfBar();
+      return;
+    }
     renderPdfBar();
     setPdfStatus("Ошибка обработки PDF — см. сообщение в чате.");
     addAssistantMessage(
