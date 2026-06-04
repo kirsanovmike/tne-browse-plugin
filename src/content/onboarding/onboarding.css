@@ -1,0 +1,125 @@
+/* PHASE 8: онбординг. Все элементы — префикс tne-onb-, цвета на переменных панели. */
+#tne-page-chat-root {
+  --tne-onb-accent: var(--tne-primary);
+  --tne-onb-ring: rgba(154, 36, 79, 0.22);
+  --tne-onb-tint: rgba(154, 36, 79, 0.12);
+}
+
+/* ===== общий оверлей ===== */
+.tne-onb-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(6, 10, 20, 0.55);
+  padding: 16px;
+}
+
+/* ===== карусель ===== */
+.tne-onb-card {
+  width: 100%;
+  max-width: 340px;
+  background: var(--tne-chat-card);
+  border: 1px solid var(--tne-border);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 18px 50px -12px rgba(0, 0, 0, 0.7);
+}
+.tne-onb-hero {
+  height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-bottom: 1px solid var(--tne-border);
+  background:
+    radial-gradient(120px 120px at 78% 20%, var(--tne-onb-tint), transparent 60%),
+    radial-gradient(160px 140px at 20% 90%, var(--tne-onb-ring), transparent 60%),
+    var(--tne-surface-variant);
+}
+.tne-onb-badge {
+  width: 60px;
+  height: 60px;
+  border-radius: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--tne-text);
+  background: var(--tne-surface);
+  border: 1px solid var(--tne-border);
+  box-shadow: 0 14px 30px -8px rgba(0, 0, 0, 0.6);
+}
+.tne-onb-badge svg { width: 28px; height: 28px; }
+.tne-onb-body { padding: 15px 16px 6px; }
+.tne-onb-body h3 { margin: 0 0 5px; font-size: 15.5px; font-weight: 650; color: var(--tne-text); }
+.tne-onb-body p { margin: 0; font-size: 12.5px; line-height: 1.55; color: var(--tne-muted-soft); }
+.tne-onb-nav { display: flex; align-items: center; justify-content: space-between; padding: 13px 16px 16px; gap: 10px; }
+.tne-onb-dots { display: flex; gap: 6px; }
+.tne-onb-dots i { width: 6px; height: 6px; border-radius: 50%; background: var(--tne-border); transition: .2s; display: block; }
+.tne-onb-dots i.is-on { width: 18px; border-radius: 5px; background: var(--tne-onb-accent); }
+
+/* ===== кнопки ===== */
+.tne-onb-skip {
+  font-size: 11.5px; color: var(--tne-muted); background: none; border: none; cursor: pointer; padding: 6px 4px;
+}
+.tne-onb-next {
+  font-size: 11.5px; font-weight: 600; color: #fff; border: none; cursor: pointer;
+  background: var(--tne-onb-accent); padding: 8px 15px; border-radius: 9px;
+}
+.tne-onb-back {
+  font-size: 11.5px; color: var(--tne-on-surface); background: var(--tne-surface-variant);
+  border: 1px solid var(--tne-border); cursor: pointer; padding: 7px 12px; border-radius: 9px;
+}
+
+/* ===== spotlight ===== */
+.tne-onb-cutout {
+  position: absolute;
+  z-index: 41;
+  border-radius: 10px;
+  pointer-events: none;
+  box-shadow: 0 0 0 9999px rgba(6, 10, 20, 0.55), 0 0 0 4px var(--tne-onb-ring);
+  border: 1px solid var(--tne-onb-accent);
+  background: var(--tne-onb-tint);
+  transition: top .18s ease, left .18s ease, width .18s ease, height .18s ease;
+}
+.tne-onb-tip {
+  position: absolute;
+  z-index: 42;
+  width: min(300px, calc(100% - 24px));
+  padding: 13px 14px 12px;
+  border-radius: 14px;
+  background: var(--tne-chat-card);
+  border: 1px solid var(--tne-border-strong);
+  box-shadow: 0 14px 36px -14px rgba(0, 0, 0, 0.75);
+}
+.tne-onb-tip .tne-onb-ic {
+  width: 34px; height: 34px; border-radius: 10px; display: flex; align-items: center; justify-content: center;
+  color: var(--tne-onb-accent); background: var(--tne-onb-tint); border: 1px solid var(--tne-onb-ring); margin-bottom: 9px;
+}
+.tne-onb-tip .tne-onb-ic svg { width: 18px; height: 18px; }
+.tne-onb-tip h4 { margin: 0 0 4px; font-size: 13.5px; font-weight: 650; color: var(--tne-text); }
+.tne-onb-tip p { margin: 0; font-size: 11.5px; line-height: 1.5; color: var(--tne-muted-soft); }
+.tne-onb-stepno { font-size: 10px; color: var(--tne-onb-accent); font-weight: 700; letter-spacing: .06em; text-transform: uppercase; margin-bottom: 6px; }
+.tne-onb-seg { display: flex; gap: 4px; flex: 1; }
+.tne-onb-seg i { height: 3px; flex: 1; border-radius: 3px; background: var(--tne-border); display: block; }
+.tne-onb-seg i.is-on { background: var(--tne-onb-accent); }
+
+/* ===== контекстная подсказка 💡 ===== */
+.tne-onb-hint {
+  position: absolute;
+  z-index: 39;
+  width: min(220px, calc(100% - 24px));
+  padding: 9px 11px;
+  border-radius: 10px;
+  background: var(--tne-chat-card);
+  border: 1px solid var(--tne-border-strong);
+  box-shadow: 0 10px 26px -10px rgba(0, 0, 0, 0.7);
+  font-size: 11px; line-height: 1.45; color: var(--tne-on-surface);
+}
+.tne-onb-hint .tne-onb-hint-close {
+  position: absolute; top: 4px; right: 4px; width: 20px; height: 20px;
+  display: flex; align-items: center; justify-content: center;
+  background: none; border: none; cursor: pointer; color: var(--tne-muted);
+}
+.tne-onb-hint .tne-onb-hint-close svg { width: 13px; height: 13px; }
