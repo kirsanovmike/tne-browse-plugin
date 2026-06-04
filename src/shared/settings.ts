@@ -38,8 +38,10 @@ export const MAX_CONTEXT_HARD_LIMIT = 25000;
 
 export const DEFAULT_SETTINGS: Settings = {
   endpoint: "https://llm-prod.tne.tn.corp:13600/api/v1/chat/generate",
-  visionEndpoint: "",
-  token: "",
+  // Vision по умолчанию указывает на тот же endpoint, что и LLM (заполнено сразу).
+  visionEndpoint: "https://llm-prod.tne.tn.corp:13600/api/v1/chat/generate",
+  // Токен подставлен по умолчанию для корпоративной демо-конфигурации.
+  token: "sk-aYMqZ12R7lv2xBr1mtceOFGWuDXyxl2BDf21cHG5zH87dSTb1cQ6riBAXkT8DHb1",
   authHeaderName: "Authorization",
   authPrefix: "Bearer ",
   model: "qwen-main",
@@ -51,7 +53,8 @@ export const DEFAULT_SETTINGS: Settings = {
   requestTimeoutMs: 90000,
   maxRetries: 1,
   panelFontSize: 12,
-  allowExternal: false,
+  // Работа на внешних сайтах (вне whitelist) разрешена по умолчанию.
+  allowExternal: true,
   autoScreenshot: false,
   roleId: DEFAULT_ROLE_ID,
   promptTemplates: [],

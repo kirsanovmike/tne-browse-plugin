@@ -132,14 +132,10 @@
       <div class="diag-buttons">
         <button type="button" id="diag-ping">Проверить соединение с моделью</button>
         <button type="button" id="diag-vision">Проверить vision endpoint</button>
-        <button type="button" id="diag-payload">Показать последний payload (без токена)</button>
+        <button type="button" id="diag-payload">Показать последний payload</button>
         <button type="button" id="diag-error">Показать последнюю ошибку</button>
       </div>
       <pre id="diag-output" class="diag-output">Результаты диагностики появятся здесь.</pre>
-    </section>
-
-    <section class="note">
-      <strong>Для промышленного варианта:</strong> токен лучше не хранить в расширении, а ходить через backend/proxy с корпоративной авторизацией.
     </section>
   </main>
   <script type="module" src="./src/options/options.ts"></script>

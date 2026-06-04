@@ -12,9 +12,9 @@ export interface SelectionActionMeta {
 export const SELECTION_ACTION_META: readonly SelectionActionMeta[] = [
   { id: "explain", label: "Объяснить" },
   { id: "summarize", label: "Суммаризировать" },
-  { id: "translate", label: "Перевести" },
   { id: "simplify", label: "Упростить" },
   // 5.6: перевод прямо на странице (замена выделения с откатом), не в чат.
+  // Отдельной кнопки «Перевести» (в чат) больше нет — перевод только на месте.
   { id: "translate-inplace", label: "Перевести на месте" },
 ];
 

@@ -80,6 +80,28 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
 }
 
+/** Источник обращения для бэкенда: помечаем все запросы расширения. */
+export const UTM_SOURCE = "tne_chat_browser";
+
+/**
+ * Добавляет `?utm_source=tne_chat_browser` ко всем запросам расширения, чтобы на
+ * бэке было видно происхождение обращения. Существующий параметр не перезаписывает;
+ * при невалидном URL дописывает query вручную.
+ */
+export function withUtmSource(endpoint: string): string {
+  try {
+    const url = new URL(endpoint);
+    if (!url.searchParams.has("utm_source")) {
+      url.searchParams.set("utm_source", UTM_SOURCE);
+    }
+    return url.toString();
+  } catch {
+    if (/[?&]utm_source=/.test(endpoint)) return endpoint;
+    const sep = endpoint.includes("?") ? "&" : "?";
+    return `${endpoint}${sep}utm_source=${UTM_SOURCE}`;
+  }
+}
+
 /** Строит русскоязычный структурный промпт из вопроса, контекста и (опц.) роли. */
 export function buildPrompt(payload: PromptInput = {}, rolePrompt = ""): string {
   const question = String(payload.question ?? "").trim();
@@ -192,7 +214,7 @@ export async function sendRequest(
       headers[headerName] = `${prefix}${settings.token}`;
     }
 
-    const response = await fetch(endpoint, {
+    const response = await fetch(withUtmSource(endpoint), {
       method: "POST",
       headers,
       body: JSON.stringify(body),

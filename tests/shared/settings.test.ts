@@ -18,7 +18,11 @@ describe("DEFAULT_SETTINGS", () => {
     expect(DEFAULT_SETTINGS.maxContextChars).toBe(20000);
     expect(DEFAULT_SETTINGS.requestTimeoutMs).toBe(90000);
     expect(DEFAULT_SETTINGS.maxRetries).toBe(1);
-    expect(DEFAULT_SETTINGS.allowExternal).toBe(false);
+    expect(DEFAULT_SETTINGS.allowExternal).toBe(true);
+    expect(DEFAULT_SETTINGS.visionEndpoint).toBe(
+      "https://llm-prod.tne.tn.corp:13600/api/v1/chat/generate"
+    );
+    expect(DEFAULT_SETTINGS.token).not.toBe("");
     expect(DEFAULT_SETTINGS.whitelist).toEqual(["*.tn.corp", "*.transneftenergo.ru"]);
     expect(DEFAULT_SETTINGS.denylist).toEqual([]);
   });
