@@ -102,6 +102,8 @@ export function getManifest({ browser }: BuildEnv): Record<string, unknown> {
           "icons/tne-browser-chat-logo.png",
           // PDF.js worker — грузится в page-контексте через getURL (Phase 3).
           "pdf.worker.min.mjs",
+          // PHASE 7 — sandbox-страница для PDF.js (грузится в iframe из content).
+          "src/sandbox/pdf-sandbox.html",
         ],
         matches: ["<all_urls>"],
       },
