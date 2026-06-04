@@ -125,10 +125,19 @@ function tableToMatrix(table: Element): string[][] {
 }
 
 export function collectHeadings(): string[] {
-  return deepQueryAll("h1,h2,h3")
-    .filter((h) => isReadableElement(h) && !isInsideExtension(h))
-    .map((h) => normalizeText((h as HTMLElement).innerText || h.textContent || ""))
-    .filter(Boolean);
+  // Замечание 1B: расширенный селектор — кроме h1–h3 берём h4 и role='heading'
+  // (стилизованные div-заголовки с aria-level). Дедуплицируем по тексту, т.к.
+  // при расширении селектора одно и то же может попасться дважды (тег + role).
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const h of deepQueryAll("h1,h2,h3,h4,[role='heading']")) {
+    if (!isReadableElement(h) || isInsideExtension(h)) continue;
+    const text = normalizeText((h as HTMLElement).innerText || h.textContent || "");
+    if (!text || seen.has(text)) continue;
+    seen.add(text);
+    out.push(text);
+  }
+  return out;
 }
 
 export function collectInteractiveText(): string {

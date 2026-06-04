@@ -872,3 +872,73 @@
   подсвечивает текст, `[PAGE]` не кликается, нет «мёртвых» ссылок при ответе по
   картинке; ряд предпросмотра; понятность режимов; lightbox по превью/чипу и закрытие
   по фону/Esc; автостатус соединения в настройках) — за владельцем, как в Phase 1–4.
+
+## Блок замечаний после 5.4 (1–6)
+
+> Источник: `docs/план-замечания-после-5.4.md`. Шесть независимых правок,
+> выполнены в порядке 3 → 4 → 2 → 1 → 6 → 5.
+
+- **[Замечание 3] Картинка не «висит» в ленте вложений во время vision-запроса.**
+  `clearAttachments({ keepPdf: true })` перенесён сразу после `addUserMessage(...)`
+  (картинки уже сняты в локальные `images`/`bubbleImages`, запрос уходит с ними);
+  поздняя очистка в ветке успеха удалена. После отправки нижняя лента пуста сразу,
+  картинка живёт только в пузыре. PDF-чип не трогаем. Файл:
+  `src/content/panel/chat.ts`.
+- **[Замечание 4] Скролл меню `/slash` + листание стрелками.** В `render()`
+  активный пункт подскролливается во вьюпорт (`scrollIntoView({block:"nearest"})`),
+  это работает и при листании `move()`. Добавлен «фирменный» тонкий скроллбар
+  `.tne-slash-menu` (как в ленте чата, обе темы). Файлы:
+  `src/content/panel/panel.ts`, `panel.css`.
+- **[Замечание 2] Карточка «Контекст страницы» без отвлекающего градиента.**
+  `.tne-context-card` переведена на плоскую поверхность `--tne-surface-2`,
+  нейтральную рамку `--tne-border`, тонкую левую полоску `--tne-rag`, `box-shadow:none`
+  (radial/linear-градиент и цветное свечение убраны). Цвета label/title/meta — через
+  переменные (`--tne-muted`, `--tne-muted-soft`, `--tne-on-surface`) → светлая тема
+  работает автоматически; убран отдельный градиентный override карточки для light.
+  Файл: `src/content/panel/panel.css`.
+- **[Замечание 1] `[MAIN CONTENT]` больше не ссылочный блок + точнее
+  `[HEADINGS]`/`[PAGE]`.** (A) Заголовок секции основного текста заменён на
+  нескобочный `## Основной текст страницы`, `blockMap["MAIN CONTENT"]` не
+  регистрируется; из системного промпта убрано упоминание `[MAIN CONTENT]` как
+  блока-источника; в `source-links` метка исключена из `LABEL_SOURCE`;
+  `cleanModelAnswer` вырезает «висячие» `[MAIN CONTENT]`. (B) `collectHeadings`
+  расширен до `h1–h4,[role='heading']` с дедупликацией по тексту. (C) `getPageTitle`
+  получил фолбэки `og:title`/`twitter:title`/`application-name` → видимый h1 → самый
+  длинный h1. Тесты `source-links` обновлены (MAIN CONTENT не распознаётся). Файлы:
+  `src/content/context/{build-context,collectors,text-extract}.ts`,
+  `src/background/{llm-client,response-parser}.ts`,
+  `src/content/render/source-links.ts`, `tests/content/render/source-links.test.ts`.
+- **[Замечание 6] Режим «Только выделенное» → «Без контекста».** `ScopeId` получил
+  `"none"` (старые значения оставлены для совместимости). В `SCOPES` кнопка
+  `selection` заменена на `none`. `buildStructuredContext` для `"none"` строит
+  минимальный `[PAGE]` (только title+url), не собирая остальные блоки; `[DOCUMENT]`
+  и картинки идут мимо scope. Поток «спросить по выделению» переключён на
+  `setScope("all")` (выделение приходит блоком `[SELECTED]`). `buildPrompt` смягчён:
+  при контексте только из `[PAGE]` не давит инструкциями «используй только
+  контекст / ссылайся на блоки», роль сохраняется; добавлены тесты ветки.
+  `.tne-scope-hint` сделан динамическим (текст активного режима). Файлы:
+  `src/content/state.ts`, `src/content/context/build-context.ts`,
+  `src/content/panel/panel.ts`, `src/background/llm-client.ts`,
+  `tests/background/llm-client.test.ts`.
+- **[Замечание 5] Редактируемая панель готовых промптов (хранится в браузере).**
+  Захардкоженные `QUICK_ACTIONS` объединены с `promptTemplates`: дефолты вынесены в
+  `DEFAULT_TEMPLATES` (`shared/templates.ts`) и засеваются в `storage.local` при
+  первом запуске (`withSeededDefaults`). Новый модуль `panel/prompt-panel.ts`
+  рендерит чипы (клик = мгновенная отправка с подстановкой `{{выделение}}/{{url}}/
+  {{таблица}}`), мини-кнопки ✎/✕ и всегда видимую «＋ Добавить» с инлайн-редактором
+  (название + текст), пишет каждое изменение в `storage.local`. Реактивность через
+  `storage.onChanged` (баг №1: правки из настроек видны в панели сразу; и наоборот).
+  `initTemplateButtons`/`#tne-template-actions` и `QUICK_ACTIONS`/`QuickAction`
+  удалены. Чистая логика (`normalizeTemplate`, `withSeededDefaults`, сид) покрыта в
+  `tests/shared/templates.test.ts`. Файлы: `src/content/panel/prompt-panel.ts` (new),
+  `src/content/panel/{panel.ts,panel.css}`, `src/content/state.ts`,
+  `src/shared/templates.ts`, `tests/shared/templates.test.ts`.
+
+- **Проверка:** `tsc --noEmit` чист; `vitest run` — **210/210** (26 файлов);
+  `npm run build` собирает `dist/firefox` и `dist/chrome` (260 модулей,
+  +`prompt-panel`). Браузерная проверка (исчезновение картинки из ленты после
+  отправки; скролл/стрелки в `/slash`; спокойная карточка контекста в обеих темах;
+  отсутствие кликабельных `[MAIN CONTENT]` при сохранении точечных `[TABLE]/[FORM]`;
+  режим «Без контекста» и «спросить по выделению»; CRUD готовых промптов из панели с
+  переживанием перезагрузки и синхронизацией с настройками) — за владельцем, как в
+  Phase 1–5.

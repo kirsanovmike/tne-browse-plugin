@@ -52,13 +52,20 @@ export function buildStructuredContext(maxChars: number, scope: ScopeId = "all")
 
   const sections: Section[] = [];
 
+  // Замечание 6: «Без контекста» — текст страницы не собираем, [PAGE] строим в
+  // минимальном виде (только title + url, «чтобы было»). [DOCUMENT] и картинки
+  // идут мимо scope, поэтому работа с документами/картинками сохраняется.
+  const minimal = scope === "none";
+
   // [PAGE] — всегда первым, минимальный приоритет на обрезку.
-  const pageLines = [
-    `title: ${title || "не указан"}`,
-    `url: ${location.href}`,
-    `capturedAt: ${new Date().toISOString()}`,
-    metaDescription ? `description: ${metaDescription}` : "",
-  ].filter(Boolean);
+  const pageLines = minimal
+    ? [`title: ${title || "не указан"}`, `url: ${location.href}`]
+    : [
+        `title: ${title || "не указан"}`,
+        `url: ${location.href}`,
+        `capturedAt: ${new Date().toISOString()}`,
+        metaDescription ? `description: ${metaDescription}` : "",
+      ].filter(Boolean);
   sections.push({ tag: "PAGE", header: "[PAGE]", body: pageLines.join("\n"), priority: 0 });
 
   if (selection && (scope === "all" || scope === "visible" || scope === "selection")) {
@@ -118,9 +125,10 @@ export function buildStructuredContext(maxChars: number, scope: ScopeId = "all")
   if (scope === "all") {
     const mainContent = extractMainContent(source);
     if (mainContent) {
-      sections.push({ tag: "MAIN", header: "[MAIN CONTENT]", body: mainContent, priority: 7 });
-      // 5.R3-2: blockId метки [MAIN CONTENT] = "MAIN CONTENT" (см. findSourceLabels).
-      STATE.blockMap["MAIN CONTENT"] = source;
+      // Замечание 1A: основной текст оставляем в контексте, но НЕ как скобочный
+      // ID-блок — нескобочный заголовок убирает соблазн модели плодить
+      // кликабельные «[MAIN CONTENT]»-цитаты. blockMap для него не регистрируем.
+      sections.push({ tag: "MAIN", header: "## Основной текст страницы", body: mainContent, priority: 7 });
     }
 
     const interactive = collectInteractiveText();

@@ -24,6 +24,41 @@ export function newTemplateId(): string {
   return `tpl-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
+/**
+ * Замечание 5: дефолтные «готовые промпты» (бывшие QUICK_ACTIONS). Засеваются
+ * в storage.local при первом запуске, если список пуст. Стабильные id — чтобы
+ * повторный сид не плодил дубли и не «прыгал» при синхронизации.
+ */
+export const DEFAULT_TEMPLATES: readonly PromptTemplate[] = [
+  { id: "seed-important", label: "Что здесь важно?", body: "Что на этой странице самое важное? Кратко перечисли ключевые моменты." },
+  { id: "seed-explain", label: "Кратко объясни", body: "Кратко и простыми словами объясни, что это за страница и о чём она." },
+  { id: "seed-errors", label: "Найди ошибки", body: "Проверь содержимое страницы на ошибки, несоответствия и подозрительные места." },
+];
+
+/**
+ * Нормализует один промпт: тримит название (фолбэк «Без названия»), оставляет
+ * тело как есть, генерирует id при отсутствии.
+ */
+export function normalizeTemplate(input: { id?: string; label?: string; body?: string }): PromptTemplate {
+  const label = String(input.label ?? "").trim();
+  const body = String(input.body ?? "");
+  const id = input.id && String(input.id) ? String(input.id) : newTemplateId();
+  return { id, label: label || "Без названия", body };
+}
+
+/**
+ * Возвращает список промптов с засеянными дефолтами, если входной пуст.
+ * `seeded` = true означает, что нужно записать результат обратно в storage.local.
+ */
+export function withSeededDefaults(
+  templates: PromptTemplate[] | null | undefined
+): { templates: PromptTemplate[]; seeded: boolean } {
+  if (Array.isArray(templates) && templates.length) {
+    return { templates, seeded: false };
+  }
+  return { templates: DEFAULT_TEMPLATES.map((t) => ({ ...t })), seeded: true };
+}
+
 /** Подстановка {{выделение}} / {{url}} / {{таблица}} (терпима к пробелам/регистру). */
 export function applyTemplateVariables(body: string, vars: TemplateVars): string {
   return String(body ?? "")

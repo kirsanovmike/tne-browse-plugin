@@ -49,5 +49,8 @@ export function cleanModelAnswer(text: unknown): string {
     .replace(/<think>[\s\S]*?<\/think>/gi, "")
     .replace(/<thinking>[\s\S]*?<\/thinking>/gi, "")
     .replace(/^\s*Ответ:\s*/i, "")
+    // Замечание 1A: вырезаем «висячие» упоминания [MAIN CONTENT], если модель
+    // всё же их вставит (основной текст больше не является ссылочным блоком).
+    .replace(/\s*\[MAIN CONTENT\]/gi, "")
     .trim();
 }

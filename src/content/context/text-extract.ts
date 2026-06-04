@@ -172,10 +172,33 @@ export function findBestContentSource(): Element {
   return best || document.body || document.documentElement;
 }
 
-/** Заголовок страницы: document.title или первый видимый h1. */
+/**
+ * Заголовок страницы. Замечание 1C: порядок фолбэков —
+ * document.title → og:title / twitter:title → application-name → первый видимый
+ * h1 → самый длинный видимый h1. При пустом/служебном document.title мета-теги
+ * обычно осмысленнее, чем первый попавшийся h1.
+ */
 export function getPageTitle(): string {
-  const visibleH1 = [...document.querySelectorAll("h1")].find((el) => isReadableElement(el) && !isInsideExtension(el));
-  return normalizeText(document.title || visibleH1?.innerText || visibleH1?.textContent || "");
+  const docTitle = normalizeText(document.title || "");
+  if (docTitle) return docTitle;
+
+  const metaTitle = normalizeText(
+    document.querySelector<HTMLMetaElement>("meta[property='og:title']")?.content ||
+      document.querySelector<HTMLMetaElement>("meta[name='twitter:title']")?.content ||
+      document.querySelector<HTMLMetaElement>("meta[name='application-name']")?.content ||
+      ""
+  );
+  if (metaTitle) return metaTitle;
+
+  const visibleH1s = [...document.querySelectorAll("h1")]
+    .filter((el) => isReadableElement(el) && !isInsideExtension(el))
+    .map((el) => normalizeText((el as HTMLElement).innerText || el.textContent || ""))
+    .filter(Boolean);
+  if (!visibleH1s.length) return "";
+  // Первый видимый h1, но если он подозрительно короткий — берём самый длинный.
+  const first = visibleH1s[0]!;
+  if (first.length >= 8) return first;
+  return visibleH1s.reduce((a, b) => (b.length > a.length ? b : a), first);
 }
 
 /** Текущее выделение пользователя, если оно не внутри панели расширения. */

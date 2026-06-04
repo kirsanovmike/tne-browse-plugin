@@ -16,10 +16,16 @@ describe("findSourceLabels", () => {
     expect(out.map((l) => l.blockId)).toEqual(["T2", "M1", "D1"]);
   });
 
-  it("recognizes bracket-only labels SELECTED / MAIN CONTENT but not PAGE", () => {
+  it("recognizes bracket-only label SELECTED but not PAGE", () => {
     // 5.R3-2: [PAGE] — метаданные, не локализуются → остаётся обычным текстом.
-    const out = findSourceLabels("[SELECTED] [PAGE] [MAIN CONTENT]");
-    expect(out.map((l) => l.blockId)).toEqual(["SELECTED", "MAIN CONTENT"]);
+    const out = findSourceLabels("[SELECTED] [PAGE]");
+    expect(out.map((l) => l.blockId)).toEqual(["SELECTED"]);
+  });
+
+  it("does not recognize [MAIN CONTENT] as a source label (замечание 1A)", () => {
+    // Основной текст больше не ссылочный блок — метка остаётся обычным текстом.
+    const out = findSourceLabels("Смотри [MAIN CONTENT] и [TABLE T1]");
+    expect(out.map((l) => l.blockId)).toEqual(["T1"]);
   });
 
   it("returns empty for text without labels", () => {

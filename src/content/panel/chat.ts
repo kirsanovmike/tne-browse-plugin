@@ -90,6 +90,10 @@ export async function sendQuestion(force = false): Promise<void> {
   input.style.height = "auto";
   addUserMessage(question, { images: bubbleImages, docName: bubbleDoc });
   STATE.lastQuestion = question;
+  // Замечание 3: картинка уже продублирована в пузыре сообщения — сразу очищаем
+  // нижнюю ленту вложений (картинки/bubbleImages уже сняты в локальные переменные
+  // выше, поэтому запрос уйдёт с ними). keepPdf — PDF-чип не трогаем.
+  clearAttachments({ keepPdf: true });
 
   const requestId = `tne-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
   STATE.currentRequestId = requestId;
@@ -118,7 +122,6 @@ export async function sendQuestion(force = false): Promise<void> {
     const answer = response.data?.content || "Пустой ответ модели.";
     STATE.history.push({ role: "user", content: question }, { role: "assistant", content: answer });
     addAssistantMessage(answer, { latencyMs: response.data?.latencyMs });
-    clearAttachments({ keepPdf: true });
   } catch (error) {
     removeLoader(loaderId);
     addErrorMessage((error as Error)?.message || String(error), question);

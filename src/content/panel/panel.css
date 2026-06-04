@@ -130,8 +130,7 @@
 
 .tne-icon-button,
 .tne-small-button,
-.tne-message-actions button,
-.tne-quick-actions button {
+.tne-message-actions button {
   border: 1px solid rgba(106, 127, 154, 0.22);
   background: rgba(30, 41, 59, 0.72);
   color: var(--tne-text);
@@ -141,8 +140,7 @@
 
 .tne-icon-button:hover,
 .tne-small-button:hover,
-.tne-message-actions button:hover,
-.tne-quick-actions button:hover {
+.tne-message-actions button:hover {
   border-color: rgba(13, 148, 136, 0.62);
   background: rgba(13, 148, 136, 0.16);
   box-shadow: 0 10px 24px rgba(13, 148, 136, 0.12);
@@ -151,7 +149,6 @@
 .tne-icon-button:active,
 .tne-small-button:active,
 .tne-message-actions button:active,
-.tne-quick-actions button:active,
 .tne-send-button:active {
   transform: translateY(1px);
 }
@@ -225,16 +222,18 @@
   text-align: center;
 }
 
+/* Замечание 2: спокойная плоская поверхность вместо бирюзового градиента —
+   карточка читается как панель управления, а не баннер. Цвета — через переменные,
+   поэтому светлая тема работает автоматически. Акцент — тонкая левая полоска. */
 .tne-context-card {
   flex: 0 0 auto;
   margin: 12px 14px 8px;
-  padding: 10px 11px;
-  background:
-    radial-gradient(circle at 4% 0%, rgba(13, 148, 136, 0.22), transparent 36%),
-    linear-gradient(135deg, rgba(13, 148, 136, 0.13), rgba(30, 41, 59, 0.82));
-  border: 1px solid var(--tne-border-strong);
-  border-radius: 17px;
-  box-shadow: 0 14px 42px rgba(13, 148, 136, 0.09), 0 0 0 1px rgba(255,255,255,0.02) inset;
+  padding: 10px 11px 10px 12px;
+  background: var(--tne-surface-2);
+  border: 1px solid var(--tne-border);
+  border-left: 3px solid var(--tne-rag);
+  border-radius: 12px;
+  box-shadow: none;
 }
 
 .tne-context-top {
@@ -253,7 +252,7 @@
   line-height: 1.1;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: rgba(221, 227, 238, 0.58);
+  color: var(--tne-muted);
 }
 
 .tne-context-title {
@@ -270,7 +269,7 @@
 .tne-context-meta {
   margin-top: 3px;
   overflow: hidden;
-  color: rgba(221, 227, 238, 0.68);
+  color: var(--tne-muted-soft);
   font-size: 11px;
   line-height: 1.25;
   text-overflow: ellipsis;
@@ -296,7 +295,7 @@
 
 .tne-context-details {
   flex: 0 0 auto;
-  color: rgba(221, 227, 238, 0.74);
+  color: var(--tne-on-surface);
   font-size: 12px;
 }
 
@@ -547,27 +546,14 @@
 }
 
 /* 5.R2-4: три действия в один ряд; при сужении панели плавно переносятся. */
-.tne-quick-actions {
+/* Замечание 5: контейнер редактируемой панели готовых промптов (бывш. quick-actions). */
+.tne-prompt-panel {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
   flex: 0 0 auto;
   padding: 8px 14px 8px;
   border-top: 1px solid rgba(106, 127, 154, 0.12);
-}
-
-.tne-quick-actions button {
-  flex: 1 1 0;
-  min-width: 96px;
-  min-height: 43px;
-  padding: 9px 12px 8px;
-  text-align: left;
-  border-radius: 14px;
-  color: var(--tne-on-surface);
-  background: linear-gradient(180deg, rgba(30, 41, 59, 0.92), rgba(22, 30, 46, 0.92));
-  box-shadow: 0 10px 26px rgba(0,0,0,0.16), 0 1px 0 rgba(255,255,255,0.04) inset;
-  font-size: var(--tne-content-font-size);
-  line-height: 1.32;
 }
 
 .tne-chat-footer {
@@ -934,24 +920,14 @@
 #tne-page-chat-root[data-theme="light"] .tne-icon-button,
 #tne-page-chat-root[data-theme="light"] .tne-small-button,
 #tne-page-chat-root[data-theme="light"] .tne-message-actions button,
-#tne-page-chat-root[data-theme="light"] .tne-quick-actions button,
 #tne-page-chat-root[data-theme="light"] .tne-font-menu button {
   background: #f4f6fb;
   border-color: rgba(100, 116, 139, 0.26);
   color: #283448;
 }
 
-#tne-page-chat-root[data-theme="light"] .tne-quick-actions button {
-  background: linear-gradient(180deg, #ffffff, #f1f4f9);
-  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
-}
-
-#tne-page-chat-root[data-theme="light"] .tne-context-card {
-  background:
-    radial-gradient(circle at 4% 0%, rgba(13, 148, 136, 0.12), transparent 36%),
-    linear-gradient(135deg, rgba(13, 148, 136, 0.08), #ffffff);
-  box-shadow: 0 12px 34px rgba(13, 148, 136, 0.08), 0 0 0 1px rgba(15, 23, 42, 0.02) inset;
-}
+/* Замечание 2: светлая тема карточки контекста наследует плоский фон из
+   --tne-surface-2 (переопределён для light) — отдельный градиент не нужен. */
 
 /* Верхняя область карточки контекста: читаемый контраст на светлом фоне. */
 #tne-page-chat-root[data-theme="light"] .tne-context-label {
@@ -1095,7 +1071,7 @@
     border-radius: 0;
   }
 
-  .tne-quick-actions button {
+  .tne-prompt-panel .tne-prompt-chip {
     flex-basis: 100%;
   }
 }
@@ -1414,6 +1390,26 @@
   overflow: hidden;
   max-height: 220px;
   overflow-y: auto;
+  /* Замечание 4: «фирменный» тонкий скролл в палитре панели (как в ленте чата). */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(106, 127, 154, 0.42) transparent;
+}
+.tne-slash-menu::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+.tne-slash-menu::-webkit-scrollbar-track {
+  background: transparent;
+}
+.tne-slash-menu::-webkit-scrollbar-thumb {
+  background: rgba(106, 127, 154, 0.38);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+.tne-slash-menu::-webkit-scrollbar-thumb:hover {
+  background: rgba(13, 148, 136, 0.56);
+  background-clip: padding-box;
 }
 .tne-slash-item {
   display: flex;
@@ -1471,32 +1467,157 @@
   color: #283448;
 }
 
-/* ─── Кнопки шаблонов промптов (4.7) ─── */
-.tne-template-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  padding: 0 12px 8px;
+/* ─── Замечание 5: чипы готовых промптов + инлайн-редактор ─── */
+.tne-prompt-panel .tne-prompt-chip {
+  display: inline-flex;
+  align-items: stretch;
+  flex: 1 1 0;
+  min-width: 130px;
+  border: 1px solid rgba(106, 127, 154, 0.22);
+  border-radius: 14px;
+  background: rgba(30, 41, 59, 0.72);
+  overflow: hidden;
+  transition: border-color 0.16s ease;
+}
+.tne-prompt-panel .tne-prompt-chip:hover {
+  border-color: rgba(13, 148, 136, 0.5);
 }
 
-.tne-template-actions button {
-  padding: 5px 10px;
-  border-radius: 14px;
-  border: 1px dashed var(--tne-border, rgba(106, 127, 154, 0.26));
+.tne-prompt-panel .tne-prompt-run {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 38px;
+  padding: 8px 10px;
+  border: none;
   background: transparent;
-  color: var(--tne-text, #f2f5fa);
+  box-shadow: none;
+  color: var(--tne-on-surface);
+  font-size: var(--tne-content-font-size);
+  line-height: 1.3;
+  text-align: left;
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tne-prompt-panel .tne-prompt-run:hover {
+  background: rgba(13, 148, 136, 0.16);
+  box-shadow: none;
+}
+
+.tne-prompt-panel .tne-prompt-edit,
+.tne-prompt-panel .tne-prompt-del {
+  flex: 0 0 auto;
+  width: 18px;
+  min-height: 0;
+  padding: 0;
+  border: none;
+  border-left: 1px solid rgba(106, 127, 154, 0.18);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  color: var(--tne-muted-soft);
+  font-size: 9px;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0.7;
+  transition: background 0.16s ease, color 0.16s ease, opacity 0.16s ease;
+}
+.tne-prompt-panel .tne-prompt-edit:hover,
+.tne-prompt-panel .tne-prompt-del:hover {
+  opacity: 1;
+}
+.tne-prompt-panel .tne-prompt-edit:hover {
+  background: rgba(13, 148, 136, 0.16);
+  color: var(--tne-text);
+}
+.tne-prompt-panel .tne-prompt-del:hover {
+  background: var(--tne-primary);
+  color: #fff;
+}
+
+.tne-prompt-panel .tne-prompt-add {
+  flex: 0 0 auto;
+  display: inline-grid;
+  place-items: center;
+  width: 38px;
+  min-height: 38px;
+  padding: 0;
+  border: 1px dashed var(--tne-border, rgba(106, 127, 154, 0.26));
+  border-radius: 14px;
+  background: transparent;
+  box-shadow: none;
+  color: var(--tne-muted-soft);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  transition: border-color 0.16s ease, border-style 0.16s ease, color 0.16s ease;
+}
+.tne-prompt-panel .tne-prompt-add:hover {
+  border-style: solid;
+  border-color: var(--tne-rag, #0d9488);
+  color: var(--tne-text);
+}
+
+.tne-prompt-panel .tne-prompt-editor {
+  flex: 1 1 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px;
+  border: 1px solid var(--tne-border);
+  border-radius: 14px;
+  background: var(--tne-surface-2);
+}
+.tne-prompt-panel .tne-prompt-editor-label,
+.tne-prompt-panel .tne-prompt-editor-body {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 7px 9px;
+  border: 1px solid var(--tne-border);
+  border-radius: 9px;
+  background: var(--tne-surface);
+  color: var(--tne-text);
+  font: inherit;
+  font-size: 12px;
+}
+.tne-prompt-panel .tne-prompt-editor-body {
+  min-height: 56px;
+  resize: vertical;
+  font-family: inherit;
+}
+.tne-prompt-panel .tne-prompt-editor-actions {
+  display: flex;
+  gap: 6px;
+}
+.tne-prompt-panel .tne-prompt-editor-actions button {
+  flex: 0 0 auto;
+  min-height: 0;
+  padding: 6px 14px;
+  border: 1px solid var(--tne-border);
+  border-radius: 9px;
+  background: var(--tne-surface);
+  box-shadow: none;
+  color: var(--tne-text);
   font-size: 12px;
   cursor: pointer;
-  transition: border-color 0.16s ease, border-style 0.16s ease;
+}
+.tne-prompt-panel .tne-prompt-editor-save {
+  background: var(--tne-rag, #0d9488);
+  border-color: var(--tne-rag, #0d9488);
+  color: #fff;
 }
 
-.tne-template-actions button:hover {
-  border-style: solid;
-  border-color: var(--tne-primary, #9a244f);
+/* Светлая тема: чипы и кнопки берут плоские поверхности через переменные. */
+#tne-page-chat-root[data-theme="light"] .tne-prompt-panel .tne-prompt-chip {
+  background: #f4f6fb;
+  border-color: rgba(100, 116, 139, 0.26);
 }
-
-#tne-page-chat-root[data-theme="light"] .tne-template-actions button {
+#tne-page-chat-root[data-theme="light"] .tne-prompt-panel .tne-prompt-run {
   color: #283448;
+}
+#tne-page-chat-root[data-theme="light"] .tne-prompt-panel .tne-prompt-add {
+  color: #51607a;
   border-color: rgba(100, 116, 139, 0.38);
 }
 

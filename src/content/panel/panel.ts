@@ -13,7 +13,6 @@ import {
   TNE_HOST_ID,
   PANEL_ROOT_ID,
   SCOPES,
-  QUICK_ACTIONS,
   $,
   type ScopeId,
 } from "../state";
@@ -50,7 +49,7 @@ import {
   matchSlashCommands,
   type SlashCommand,
 } from "../chat/slash-commands";
-import { applyTemplateVariables, firstTableBlock } from "../../shared/templates";
+import { initPromptPanel } from "./prompt-panel";
 
 async function computeAllowed(): Promise<boolean> {
   const settings = await readSettings();
@@ -85,8 +84,10 @@ export async function togglePanel(): Promise<void> {
   }
 }
 
-// Открыть панель в режиме «Выделение» и задать вопрос с переданным промптом.
+// Открыть панель и задать вопрос с переданным промптом по выделению.
 // Базис для хоткея «спросить по выделению» и действий по выделению (4.4).
+// Замечание 6: режим «Только выделенное» убран из UI — используем scope "all",
+// выделение всё равно приходит приоритетным блоком [SELECTED] (build-context:64).
 export async function askWithSelectionPrompt(prompt: string): Promise<void> {
   ensureHost();
   STATE.allowed = await computeAllowed();
@@ -105,7 +106,7 @@ export async function askWithSelectionPrompt(prompt: string): Promise<void> {
     startDomWatcher();
   }
 
-  setScope("selection");
+  setScope("all");
   await refreshContext(false, "ask-selection");
 
   const input = $("#tne-chat-input") as HTMLTextAreaElement | null;
@@ -220,6 +221,8 @@ function createSlashMenu(root: HTMLElement, input: HTMLTextAreaElement): SlashMe
       menu.appendChild(item);
     });
     menu.hidden = matches.length === 0;
+    // Замечание 4: держим активный пункт во вьюпорте при листании стрелками.
+    (menu.children[active] as HTMLElement | undefined)?.scrollIntoView({ block: "nearest" });
   }
 
   function update(): void {
@@ -301,7 +304,7 @@ function buildPanelUI(root: HTMLElement): void {
             <button class="tne-small-button" id="tne-refresh-context" type="button">Обновить</button>
           </div>
           <div class="tne-scope-row" id="tne-scope-row"></div>
-          <div class="tne-scope-hint">«Вся страница» — отвечаю по всему тексту; «Только выделенное» — лишь по выделенному фрагменту.</div>
+          <div class="tne-scope-hint" id="tne-scope-hint"></div>
           <div class="tne-context-previews">
             <details class="tne-context-details">
               <summary>Показать извлечённый текст</summary>
@@ -324,8 +327,7 @@ function buildPanelUI(root: HTMLElement): void {
 
         <main class="tne-chat-messages elegant-scroll" id="tne-chat-messages"></main>
 
-        <div class="tne-quick-actions" id="tne-quick-actions"></div>
-        <div class="tne-template-actions" id="tne-template-actions" hidden></div>
+        <div class="tne-prompt-panel" id="tne-quick-actions"></div>
 
         <div class="tne-attach-bar">
           <div class="tne-pdf-bar" id="tne-pdf-bar" hidden></div>
@@ -428,19 +430,9 @@ function buildPanelUI(root: HTMLElement): void {
     slash.update();
   });
 
-  const quick = root.querySelector("#tne-quick-actions");
-  QUICK_ACTIONS.forEach((action) => {
-    const button = document.createElement("button");
-    button.type = "button";
-    button.textContent = action.label;
-    button.addEventListener("click", () => {
-      input.value = action.prompt;
-      sendQuestion();
-    });
-    quick?.appendChild(button);
-  });
-
-  void initTemplateButtons(root);
+  // Замечание 5: единая редактируемая панель готовых промптов (хранится в
+  // storage.local, синхронна с настройками через storage.onChanged).
+  void initPromptPanel(root);
 
   renderWelcomeMessage();
 
@@ -459,41 +451,6 @@ function buildPanelUI(root: HTMLElement): void {
     keyEvent.preventDefault();
     highlightBlock(id);
   });
-}
-
-async function initTemplateButtons(root: HTMLElement): Promise<void> {
-  const row = root.querySelector("#tne-template-actions") as HTMLElement | null;
-  const input = root.querySelector("#tne-chat-input") as HTMLTextAreaElement | null;
-  if (!row || !input) return;
-
-  const settings = await readSettings();
-  const templates = settings.promptTemplates || [];
-  row.innerHTML = "";
-  if (!templates.length) {
-    row.hidden = true;
-    return;
-  }
-
-  for (const tpl of templates) {
-    const button = document.createElement("button");
-    button.type = "button";
-    button.textContent = tpl.label || "Без названия";
-    button.title = "Шаблон промпта";
-    button.addEventListener("click", async () => {
-      if (STATE.contextDirty || !STATE.page) await refreshContext(false, "template");
-      const vars = {
-        selection: STATE.page?.selection || getSafeSelection() || "",
-        url: location.href,
-        table: firstTableBlock(STATE.page?.text || ""),
-      };
-      input.value = applyTemplateVariables(tpl.body, vars);
-      input.style.height = "auto";
-      input.style.height = `${Math.min(input.scrollHeight, 120)}px`;
-      input.focus();
-    });
-    row.appendChild(button);
-  }
-  row.hidden = false;
 }
 
 async function initRoleSelect(root: HTMLElement): Promise<void> {
@@ -538,6 +495,8 @@ function buildScopeRow(root: HTMLElement): void {
     });
     row.appendChild(button);
   });
+  // Замечание 6: нормализуем возможный легаси-scope к "all" и заполняем подсказку.
+  setScope(SCOPES.some((s) => s.id === STATE.scope) ? STATE.scope : "all");
 }
 
 function setScope(scopeId: ScopeId): void {
@@ -546,4 +505,7 @@ function setScope(scopeId: ScopeId): void {
   row?.querySelectorAll<HTMLElement>(".tne-scope-button").forEach((b) =>
     b.classList.toggle("tne-scope-button--active", b.dataset.scope === scopeId)
   );
+  // Замечание 6: подсказка под кнопками отражает активный режим.
+  const hint = $("#tne-scope-hint");
+  if (hint) hint.textContent = SCOPES.find((s) => s.id === scopeId)?.hint || "";
 }

@@ -30,7 +30,7 @@ export const OBSERVER_OPTIONS: MutationObserverInit = {
   attributeFilter: ["value", "placeholder", "title", "aria-label", "aria-labelledby", "class", "style", "hidden", "aria-hidden"],
 };
 
-export type ScopeId = "all" | "visible" | "selection" | "tables";
+export type ScopeId = "all" | "visible" | "selection" | "tables" | "none";
 
 export interface ScopeOption {
   id: ScopeId;
@@ -39,9 +39,10 @@ export interface ScopeOption {
   hint: string;
 }
 
-// 5.R2-11: оставлены два главных режима. «Видимое» и «Таблицы» убраны как
-// нишевые (экспорт таблиц живёт отдельной кнопкой). ScopeId сохраняет старые
-// значения для совместимости логики сбора, но в UI они не предлагаются.
+// Замечание 6: два режима — «Вся страница» и «Без контекста». «Видимое»,
+// «Таблицы» и «Только выделенное» убраны из UI; ScopeId сохраняет старые
+// значения для совместимости логики сбора (выделение приходит блоком [SELECTED]
+// и при scope === "all").
 export const SCOPES: readonly ScopeOption[] = [
   {
     id: "all",
@@ -49,23 +50,15 @@ export const SCOPES: readonly ScopeOption[] = [
     hint: "Беру весь значимый текст страницы — основной контент, заголовки, формы и таблицы.",
   },
   {
-    id: "selection",
-    label: "Только выделенное",
-    hint: "Отвечаю строго по выделенному на странице тексту, без остального содержимого.",
+    id: "none",
+    label: "Без контекста",
+    hint: "Не собираю текст страницы — только роль и базовые сведения (заголовок, URL). Документы и картинки по-прежнему прикладываются.",
   },
 ];
 
-export interface QuickAction {
-  label: string;
-  prompt: string;
-}
-
-// 5.R2-4: три самых нужных быстрых действия, адаптивный ряд (см. .tne-quick-actions).
-export const QUICK_ACTIONS: readonly QuickAction[] = [
-  { label: "Что здесь важно?", prompt: "Что на этой странице самое важное? Кратко перечисли ключевые моменты." },
-  { label: "Кратко объясни", prompt: "Кратко и простыми словами объясни, что это за страница и о чём она." },
-  { label: "Найди ошибки", prompt: "Проверь содержимое страницы на ошибки, несоответствия и подозрительные места." },
-];
+// Замечание 5: бывшие захардкоженные QUICK_ACTIONS перенесены в хранимый список
+// готовых промптов (DEFAULT_TEMPLATES в shared/templates.ts) — редактируются из
+// панели и страницы настроек, синхронны через storage.onChanged.
 
 export type Theme = "dark" | "light";
 

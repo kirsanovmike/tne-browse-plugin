@@ -51,6 +51,25 @@ describe("buildPrompt", () => {
     expect(prompt.match(/содержимое страницы/g)).toHaveLength(1);
   });
 
+  it("uses rich-context instructions when page text has structured blocks (замечание 6)", () => {
+    const prompt = buildPrompt({ question: "q", page: { text: "[PAGE]\ntitle: T\n\n## Основной текст страницы\nтело" } });
+    expect(prompt).toContain("Используй только переданный контекст страницы");
+    expect(prompt).not.toContain("Контекст страницы не передавался");
+  });
+
+  it("softens instructions in no-context mode (only [PAGE]) (замечание 6)", () => {
+    const prompt = buildPrompt({ question: "q", page: { text: "[PAGE]\ntitle: T\nurl: u" } });
+    expect(prompt).toContain("Контекст страницы не передавался, кроме базовых сведений");
+    expect(prompt).not.toContain("Используй только переданный контекст страницы");
+    expect(prompt).not.toContain("[DOCUMENT D1]");
+  });
+
+  it("mentions the document in no-context mode when a PDF is attached (замечание 6)", () => {
+    const prompt = buildPrompt({ question: "q", page: { text: "[PAGE]\ntitle: T\nurl: u\n\n[DOCUMENT D1]\nтекст pdf" } });
+    expect(prompt).toContain("Контекст страницы не передавался");
+    expect(prompt).toContain("[DOCUMENT D1]");
+  });
+
   it("keeps only the last 2 exchanges", () => {
     const history = Array.from({ length: 8 }, (_, i) => ({
       role: i % 2 === 0 ? "user" : "assistant",

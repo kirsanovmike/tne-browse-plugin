@@ -8,11 +8,13 @@
 import { STATE } from "../state";
 
 /**
- * Распознаёт [FORM Fn]/[TABLE Tn]/[MODAL Mn]/[DOCUMENT Dn] и [SELECTED]/[MAIN CONTENT].
+ * Распознаёт [FORM Fn]/[TABLE Tn]/[MODAL Mn]/[DOCUMENT Dn] и [SELECTED].
  * [PAGE] намеренно не распознаётся (5.R3-2): это метаданные (title/url/время),
  * их нельзя подсветить как DOM-элемент → остаются обычным текстом.
+ * Замечание 1A: [MAIN CONTENT] исключён — основной текст больше не ссылочный
+ * блок (модель плодила бесполезные кликабельные «[MAIN CONTENT]»-цитаты).
  */
-const LABEL_SOURCE = "\\[(FORM|TABLE|MODAL|DOCUMENT)\\s+([A-Z]\\d+)\\]|\\[(SELECTED|MAIN CONTENT)\\]";
+const LABEL_SOURCE = "\\[(FORM|TABLE|MODAL|DOCUMENT)\\s+([A-Z]\\d+)\\]|\\[(SELECTED)\\]";
 
 export interface SourceLabel {
   index: number;
