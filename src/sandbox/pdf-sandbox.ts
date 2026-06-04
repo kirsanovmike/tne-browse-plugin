@@ -10,7 +10,9 @@ import { browser } from "../shared/browser";
 import type { OpenRequest, PagesRequest, SandboxReply } from "./protocol";
 
 const LOAD_TIMEOUT_MS = 25000;
-const PAGE_TIMEOUT_MS = 20000;
+// Сохраняем прежнее поведение оркестратора: текст дешевле рендера.
+const PAGE_TEXT_TIMEOUT_MS = 15000;
+const PAGE_RENDER_TIMEOUT_MS = 20000;
 
 let workerConfigured = false;
 let doc: PDFDocumentProxy | null = null;
@@ -64,6 +66,11 @@ async function renderPage(d: PDFDocumentProxy, n: number, scale: number): Promis
 
 async function handleOpen(req: OpenRequest): Promise<void> {
   configureWorker();
+  // Освобождаем прошлый документ (worker/кэш), если открывают второй PDF подряд.
+  if (doc) {
+    try { await doc.destroy(); } catch { /* best-effort */ }
+    doc = null;
+  }
   const task = pdfjs.getDocument({ data: new Uint8Array(req.buffer) });
   try {
     doc = await withTimeout(
@@ -87,7 +94,7 @@ async function handlePages(req: PagesRequest): Promise<void> {
     const texts: string[] = [];
     for (let i = 0; i < req.pages.length; i++) {
       reply({ type: "TNE_PDF_PROGRESS", reqId: req.reqId, stage: "text", index: i, total: req.pages.length });
-      texts.push(await withTimeout(extractPageText(doc, req.pages[i]!), PAGE_TIMEOUT_MS,
+      texts.push(await withTimeout(extractPageText(doc, req.pages[i]!), PAGE_TEXT_TIMEOUT_MS,
         `PDF.js не ответил при извлечении текста страницы ${req.pages[i]}.`));
     }
     const images: { page: number; dataUrl: string }[] = [];
@@ -95,7 +102,7 @@ async function handlePages(req: PagesRequest): Promise<void> {
       for (let i = 0; i < req.pages.length; i++) {
         const p = req.pages[i]!;
         reply({ type: "TNE_PDF_PROGRESS", reqId: req.reqId, stage: "render", index: i, total: req.pages.length });
-        const dataUrl = await withTimeout(renderPage(doc, p, req.scale), PAGE_TIMEOUT_MS,
+        const dataUrl = await withTimeout(renderPage(doc, p, req.scale), PAGE_RENDER_TIMEOUT_MS,
           `PDF.js не ответил при отрисовке страницы ${p}.`);
         images.push({ page: p, dataUrl });
       }
