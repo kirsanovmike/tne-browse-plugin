@@ -18,6 +18,8 @@ type Pending = {
 const pending = new Map<string, Pending>();
 
 function onMessage(ev: MessageEvent): void {
+  // Принимаем ответы только от нашего sandbox-iframe (не от страницы/чужих фреймов).
+  if (ev.source !== iframe?.contentWindow) return;
   const msg = ev.data as SandboxReply | undefined;
   if (!msg || typeof msg !== "object") return;
   if (msg.type === "TNE_PDF_SANDBOX_READY") return; // обрабатывается в ensureSandbox
