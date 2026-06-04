@@ -50,6 +50,8 @@ import {
   type SlashCommand,
 } from "../chat/slash-commands";
 import { initPromptPanel } from "./prompt-panel";
+import { HELP_ICON } from "../onboarding/icons";
+import { maybeStartOnboarding, startWelcome, initHints } from "../onboarding";
 
 async function computeAllowed(): Promise<boolean> {
   const settings = await readSettings();
@@ -81,6 +83,7 @@ export async function togglePanel(): Promise<void> {
     }
     const input = $("#tne-chat-input");
     setTimeout(() => input?.focus(), 80);
+    void maybeStartOnboarding();
   }
 }
 
@@ -290,6 +293,7 @@ function buildPanelUI(root: HTMLElement): void {
             <button class="tne-icon-button" id="tne-chat-export" title="Экспортировать диалог в .md" type="button" aria-label="Экспортировать диалог в Markdown">${EXPORT_ICON}</button>
             <button class="tne-icon-button" id="tne-chat-clear" title="Очистить чат" type="button" aria-label="Очистить чат">${ERASER_ICON}</button>
             <button class="tne-icon-button" id="tne-chat-settings" title="Настройки" type="button" aria-label="Настройки">${GEAR_ICON}</button>
+            <button class="tne-icon-button" id="tne-chat-help" title="Обучение / помощь" type="button" aria-label="Обучение">${HELP_ICON}</button>
             <button class="tne-icon-button" id="tne-chat-close" title="Закрыть (Esc)" type="button" aria-label="Закрыть">${CLOSE_ICON}</button>
           </div>
         </header>
@@ -363,6 +367,7 @@ function buildPanelUI(root: HTMLElement): void {
   initOffice(root);
 
   root.querySelector("#tne-chat-close")?.addEventListener("click", () => togglePanel());
+  root.querySelector("#tne-chat-help")?.addEventListener("click", () => startWelcome());
   root.querySelector("#tne-theme-toggle")?.addEventListener("click", () => toggleTheme());
   root.querySelector("#tne-chat-settings")?.addEventListener("click", () => browser.runtime.sendMessage({ type: "TNE_OPEN_OPTIONS" }));
   root.querySelector("#tne-chat-export")?.addEventListener("click", () => exportDialog());
@@ -451,6 +456,8 @@ function buildPanelUI(root: HTMLElement): void {
     keyEvent.preventDefault();
     highlightBlock(id);
   });
+
+  void initHints();
 }
 
 async function initRoleSelect(root: HTMLElement): Promise<void> {
