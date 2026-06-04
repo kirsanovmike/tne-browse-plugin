@@ -942,3 +942,51 @@
   режим «Без контекста» и «спросить по выделению»; CRUD готовых промптов из панели с
   переживанием перезагрузки и синхронизацией с настройками) — за владельцем, как в
   Phase 1–5.
+
+## PHASE 8 — Онбординг (карусель + spotlight-тур + подсказки 💡)
+
+Дизайн: `docs/superpowers/specs/2026-06-04-onboarding-design.md`; план:
+`docs/superpowers/plans/2026-06-04-onboarding.md`. Выполнено по плану (executing-plans,
+TDD на чистых модулях). Ветка `phase8-onboarding`. Новый изолированный модуль
+`src/content/onboarding/`; background/options/манифест/контракт сообщений НЕ менялись —
+всё в content-слое, без новых прав.
+
+- **Состояние** — `onboarding/state.ts`: `storage.local` ключ `tneOnboarding`
+  (`{seenVersion, hintsSeen[]}`), `ONBOARDING_VERSION=1`. Чистые `shouldAutoStart`
+  (показ карусели при первом запуске), `isHintSeen`/`withHintSeen` (иммутабельно,
+  без дублей) — под Vitest; `read/write/markSeen/markHintSeen` — тонкие обёртки.
+- **Карусель приветствия** — `onboarding/welcome.ts`: оверлей в shadow root панели
+  (3 слайда: «читаю страницу» / «не только вопросы» / «покажу, где что лежит»);
+  «Пропустить»/«Не сейчас» → `markSeen`, «Провести →» с последнего слайда →
+  `startTour()` (он сам помечает виденным).
+- **Spotlight-тур** — `onboarding/tour.ts`: чистая `nextVisibleIndex()` (Vitest) +
+  DOM-движок `startTour/closeTour/render` (вырезка-подсветка `.tne-onb-cutout` +
+  карточка `.tne-onb-tip`). 8 шагов (`tour-steps.ts`, Vitest на валидность данных):
+  контекст → размер текста → скачать диалог → очистить → настройки → вложения
+  (группа из 3 кнопок) → таблицы→Excel → команды/промпты. Якоря — реальные
+  селекторы шапки/тулбара. Скрытые на странице шаги пропускаются. Клавиатура:
+  `→`/`Enter` далее, `←` назад, `Esc` закрыть. `body` шага через `sanitizeBody`
+  (разрешён только `<b>`), заголовок — `textContent`.
+- **Контекстные подсказки 💡** — `onboarding/hints.ts`: одноразовые (роль/тема/
+  обновление контекста), по одной за раз, на первом `mouseenter`, не во время
+  карусели/тура; закрытие крестиком или кликом по якорю → `markHintSeen`.
+- **Стили** — `onboarding/onboarding.css` (`?inline`) на переменных панели (обе
+  темы), инъекция отдельным `<style>` в shadow root через `onboarding/styles.ts`
+  (вынесен, чтобы не было цикла импортов через `index.ts`).
+- **Интеграция** — `onboarding/index.ts` (`maybeStartOnboarding`/`startWelcome`/
+  `startTour`/`initHints`); в `panel/panel.ts`: кнопка «?» (`#tne-chat-help`,
+  `HELP_ICON`) в шапке слева от «Закрыть», авто-показ `maybeStartOnboarding()` в
+  `togglePanel()` (после фокуса ввода; ветка blocked-домена делает `return` раньше →
+  на запрещённом домене онбординг не запускается), `void initHints()` в конце
+  `buildPanelUI`.
+- **Файлы:** new `src/content/onboarding/{state,icons,tour-steps,onboarding.css,
+  styles,tour,welcome,hints,index}.ts`; правки `src/content/panel/panel.ts`. Тесты:
+  `tests/content/onboarding/{state,tour-steps,tour}.test.ts` (+14).
+- **Проверка:** `npm run ci` зелёный — `tsc --noEmit` (strict) чист; `vitest run` —
+  **224/224** (210 прежних + 14 новых: state 4 + tour-steps 5 + tour 5); `npm run build`
+  собирает `dist/firefox` и `dist/chrome` (269 модулей, +`onboarding`); `web-ext lint
+  dist/firefox` — **0 errors** (warnings — пред-существующие `eval`/`innerHTML` из
+  бандла, новых ошибок нет); CDN в `dist/` не добавлены. Ручная приёмка (авто-карусель
+  при первом открытии → тур по 8 кнопкам, «Назад»/сегменты/клавиатура, отсутствие
+  повторного авто-показа, подсказки 💡, обе темы и ширина, неактивность на запрещённом
+  домене) — за владельцем, как в Phase 1–5.
