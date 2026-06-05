@@ -53,7 +53,7 @@
 .tne-onb-badge svg { width: 28px; height: 28px; }
 .tne-onb-body { padding: 15px 16px 6px; }
 .tne-onb-body h3 { margin: 0 0 5px; font-size: 15.5px; font-weight: 650; color: var(--tne-text); }
-.tne-onb-body p { margin: 0; font-size: 12.5px; line-height: 1.55; color: var(--tne-muted-soft); }
+.tne-onb-body p { margin: 0; font-size: 12.5px; line-height: 1.55; color: var(--tne-muted-soft); white-space: pre-line; }
 .tne-onb-nav { display: flex; align-items: center; justify-content: space-between; padding: 13px 16px 16px; gap: 10px; }
 .tne-onb-dots { display: flex; gap: 6px; }
 .tne-onb-dots i { width: 6px; height: 6px; border-radius: 50%; background: var(--tne-border); transition: .2s; display: block; }
@@ -73,9 +73,18 @@
 }
 
 /* ===== spotlight ===== */
+/* Слой затемнения повторяет форму панели (margin:12px + radius:22px) и клипует
+   вырез по своим границам — затемнение не выходит за панель (зад. 1, 9). */
+.tne-onb-dim {
+  position: absolute;
+  inset: 12px;
+  z-index: 41;
+  border-radius: 22px;
+  overflow: hidden;
+  pointer-events: none;
+}
 .tne-onb-cutout {
   position: absolute;
-  z-index: 41;
   border-radius: 10px;
   pointer-events: none;
   box-shadow: 0 0 0 9999px rgba(6, 10, 20, 0.55), 0 0 0 4px var(--tne-onb-ring);
@@ -93,6 +102,16 @@
   border: 1px solid var(--tne-border-strong);
   box-shadow: 0 14px 36px -14px rgba(0, 0, 0, 0.75);
 }
+/* «Носик» карточки к вырезу (зад. 8) */
+.tne-onb-arrow {
+  position: absolute;
+  width: 12px; height: 12px;
+  background: var(--tne-chat-card);
+  border: 1px solid var(--tne-border-strong);
+  transform: translateX(-50%) rotate(45deg);
+}
+.tne-onb-arrow.is-up { top: -7px; border-right: none; border-bottom: none; }
+.tne-onb-arrow.is-down { bottom: -7px; border-left: none; border-top: none; }
 .tne-onb-tip .tne-onb-ic {
   width: 34px; height: 34px; border-radius: 10px; display: flex; align-items: center; justify-content: center;
   color: var(--tne-onb-accent); background: var(--tne-onb-tint); border: 1px solid var(--tne-onb-ring); margin-bottom: 9px;
@@ -100,26 +119,14 @@
 .tne-onb-tip .tne-onb-ic svg { width: 18px; height: 18px; }
 .tne-onb-tip h4 { margin: 0 0 4px; font-size: 13.5px; font-weight: 650; color: var(--tne-text); }
 .tne-onb-tip p { margin: 0; font-size: 11.5px; line-height: 1.5; color: var(--tne-muted-soft); }
-.tne-onb-stepno { font-size: 10px; color: var(--tne-onb-accent); font-weight: 700; letter-spacing: .06em; text-transform: uppercase; margin-bottom: 6px; }
+/* «Шаг N из M» — чип на подложке для контраста (зад. 3) */
+.tne-onb-stepno {
+  display: inline-block;
+  font-size: 10.5px; color: var(--tne-text); font-weight: 700;
+  letter-spacing: .05em; text-transform: uppercase;
+  padding: 3px 8px; border-radius: 999px; margin-bottom: 8px;
+  background: var(--tne-onb-tint); border: 1px solid var(--tne-onb-ring);
+}
 .tne-onb-seg { display: flex; gap: 4px; flex: 1; }
-.tne-onb-seg i { height: 3px; flex: 1; border-radius: 3px; background: var(--tne-border); display: block; }
+.tne-onb-seg i { height: 4px; flex: 1; border-radius: 3px; background: var(--tne-border-strong); display: block; }
 .tne-onb-seg i.is-on { background: var(--tne-onb-accent); }
-
-/* ===== контекстная подсказка 💡 ===== */
-.tne-onb-hint {
-  position: absolute;
-  z-index: 39;
-  width: min(220px, calc(100% - 24px));
-  padding: 9px 11px;
-  border-radius: 10px;
-  background: var(--tne-chat-card);
-  border: 1px solid var(--tne-border-strong);
-  box-shadow: 0 10px 26px -10px rgba(0, 0, 0, 0.7);
-  font-size: 11px; line-height: 1.45; color: var(--tne-on-surface);
-}
-.tne-onb-hint .tne-onb-hint-close {
-  position: absolute; top: 4px; right: 4px; width: 20px; height: 20px;
-  display: flex; align-items: center; justify-content: center;
-  background: none; border: none; cursor: pointer; color: var(--tne-muted);
-}
-.tne-onb-hint .tne-onb-hint-close svg { width: 13px; height: 13px; }

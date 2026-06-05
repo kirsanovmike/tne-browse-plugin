@@ -102,6 +102,10 @@ export function routeMessage(message: unknown): false | Promise<RouteResult> {
       void browser.runtime.openOptionsPage();
       return Promise.resolve<OkResponse>({ ok: true });
 
+    case "TNE_OPEN_URL":
+      void browser.tabs.create({ url: message.url });
+      return Promise.resolve<OkResponse>({ ok: true });
+
     default:
       return false;
   }

@@ -3,8 +3,21 @@ import { TOUR_STEPS } from "../../../src/content/onboarding/tour-steps";
 import { ONBOARDING_ICONS } from "../../../src/content/onboarding/icons";
 
 describe("TOUR_STEPS", () => {
-  it("содержит ровно 8 шагов", () => {
-    expect(TOUR_STEPS).toHaveLength(8);
+  it("идёт в согласованном порядке (9 шагов, font перед theme)", () => {
+    expect(TOUR_STEPS.map((s) => s.id)).toEqual([
+      "context", "role", "font", "theme", "export", "clear", "attach", "tables", "prompts",
+    ]);
+  });
+
+  it("шаги с якорями в меню настроек помечены requiresMenu", () => {
+    const inMenu = TOUR_STEPS.filter((s) => s.requiresMenu).map((s) => s.id);
+    expect(inMenu).toEqual(["role", "font", "theme", "export", "clear"]);
+  });
+
+  it("в текстах шагов нет слова «чип»", () => {
+    for (const step of TOUR_STEPS) {
+      expect(`${step.title} ${step.body}`.toLowerCase()).not.toContain("чип");
+    }
   });
 
   it("у всех шагов уникальный id", () => {

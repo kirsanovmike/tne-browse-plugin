@@ -7,7 +7,6 @@ import { startWelcome } from "./welcome";
 export { ensureOnboardingStyles } from "./styles";
 export { startWelcome } from "./welcome";
 export { startTour, closeTour } from "./tour";
-export { initHints } from "./hints";
 
 /** Авто-показ карусели при первом открытии панели (по флагу). */
 export async function maybeStartOnboarding(): Promise<void> {

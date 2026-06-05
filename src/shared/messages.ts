@@ -38,6 +38,7 @@ export type TneRequest =
   | { type: "TNE_TOGGLE_PANEL" }
   | { type: "TNE_ASK_SELECTION" }
   | { type: "TNE_OPEN_OPTIONS" }
+  | { type: "TNE_OPEN_URL"; url: string }
   | { type: "TNE_ABORT"; requestId: string }
   | { type: "TNE_ASK_MODEL"; requestId: string; payload: AskModelPayload }
   | { type: "TNE_BUILD_PAYLOAD"; payload: BuildPayloadPayload }

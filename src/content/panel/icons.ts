@@ -79,6 +79,20 @@ export const TABLE_EXPORT_ICON = `
       <path d="M19 13v6m0 0-2.2-2.2M19 19l2.2-2.2" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
     </svg>`;
 
+// Роль ассистента — силуэт собеседника (пункт меню «Собеседник»).
+export const ROLE_ICON = `
+    <svg class="tne-action-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <circle cx="12" cy="8" r="3.6" fill="none" stroke="currentColor" stroke-width="1.6"/>
+      <path d="M5 20a7 7 0 0 1 14 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+    </svg>`;
+
+// Ссылка на основной веб-ассистент — стрелка «открыть во внешней вкладке».
+export const LINK_ICON = `
+    <svg class="tne-action-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <path d="M14 4h6v6M20 4l-8 8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M18 14v4a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>`;
+
 // 5.4: «Заполнить форму по описанию» — бланк с пером.
 export const FORM_FILL_ICON = `
     <svg class="tne-action-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">

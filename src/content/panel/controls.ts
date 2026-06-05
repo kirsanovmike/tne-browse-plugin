@@ -23,27 +23,12 @@ export async function initFontControls(root: HTMLElement): Promise<void> {
   const saved = await browser.storage.local.get([FONT_SIZE_KEY]);
   applyPanelFontSize(root, clampFontSize(saved[FONT_SIZE_KEY]));
 
-  const wrap = root.querySelector("#tne-font-menu-wrap");
-  const trigger = root.querySelector("#tne-font-trigger");
+  // Степпер размера текста живёт строкой в меню настроек (доработки п. 2) —
+  // отдельный поповер-триггер больше не нужен, −/+ всегда на виду при открытом меню.
   const minus = root.querySelector("#tne-font-minus");
   const plus = root.querySelector("#tne-font-plus");
-
-  trigger?.addEventListener("click", (event) => {
-    event.stopPropagation();
-    wrap?.classList.toggle("tne-font-menu-wrap--open");
-  });
   minus?.addEventListener("click", () => changePanelFontSize(-1));
   plus?.addEventListener("click", () => changePanelFontSize(1));
-
-  document.addEventListener(
-    "click",
-    (event) => {
-      const path = event.composedPath ? event.composedPath() : [];
-      if (wrap && path.includes(wrap)) return;
-      wrap?.classList.remove("tne-font-menu-wrap--open");
-    },
-    true
-  );
 }
 
 function clampFontSize(value: unknown): number {
