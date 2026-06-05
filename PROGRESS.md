@@ -942,3 +942,122 @@
   режим «Без контекста» и «спросить по выделению»; CRUD готовых промптов из панели с
   переживанием перезагрузки и синхронизацией с настройками) — за владельцем, как в
   Phase 1–5.
+
+## PHASE 8 — Онбординг (карусель + spotlight-тур + подсказки 💡)
+
+Дизайн: `docs/superpowers/specs/2026-06-04-onboarding-design.md`; план:
+`docs/superpowers/plans/2026-06-04-onboarding.md`. Выполнено по плану (executing-plans,
+TDD на чистых модулях). Ветка `phase8-onboarding`. Новый изолированный модуль
+`src/content/onboarding/`; background/options/манифест/контракт сообщений НЕ менялись —
+всё в content-слое, без новых прав.
+
+- **Состояние** — `onboarding/state.ts`: `storage.local` ключ `tneOnboarding`
+  (`{seenVersion, hintsSeen[]}`), `ONBOARDING_VERSION=1`. Чистые `shouldAutoStart`
+  (показ карусели при первом запуске), `isHintSeen`/`withHintSeen` (иммутабельно,
+  без дублей) — под Vitest; `read/write/markSeen/markHintSeen` — тонкие обёртки.
+- **Карусель приветствия** — `onboarding/welcome.ts`: оверлей в shadow root панели
+  (3 слайда: «читаю страницу» / «не только вопросы» / «покажу, где что лежит»);
+  «Пропустить»/«Не сейчас» → `markSeen`, «Провести →» с последнего слайда →
+  `startTour()` (он сам помечает виденным).
+- **Spotlight-тур** — `onboarding/tour.ts`: чистая `nextVisibleIndex()` (Vitest) +
+  DOM-движок `startTour/closeTour/render` (вырезка-подсветка `.tne-onb-cutout` +
+  карточка `.tne-onb-tip`). 8 шагов (`tour-steps.ts`, Vitest на валидность данных):
+  контекст → размер текста → скачать диалог → очистить → настройки → вложения
+  (группа из 3 кнопок) → таблицы→Excel → команды/промпты. Якоря — реальные
+  селекторы шапки/тулбара. Скрытые на странице шаги пропускаются. Клавиатура:
+  `→`/`Enter` далее, `←` назад, `Esc` закрыть. `body` шага через `sanitizeBody`
+  (разрешён только `<b>`), заголовок — `textContent`.
+- **Контекстные подсказки 💡** — `onboarding/hints.ts`: одноразовые (роль/тема/
+  обновление контекста), по одной за раз, на первом `mouseenter`, не во время
+  карусели/тура; закрытие крестиком или кликом по якорю → `markHintSeen`.
+- **Стили** — `onboarding/onboarding.css` (`?inline`) на переменных панели (обе
+  темы), инъекция отдельным `<style>` в shadow root через `onboarding/styles.ts`
+  (вынесен, чтобы не было цикла импортов через `index.ts`).
+- **Интеграция** — `onboarding/index.ts` (`maybeStartOnboarding`/`startWelcome`/
+  `startTour`/`initHints`); в `panel/panel.ts`: кнопка «?» (`#tne-chat-help`,
+  `HELP_ICON`) в шапке слева от «Закрыть», авто-показ `maybeStartOnboarding()` в
+  `togglePanel()` (после фокуса ввода; ветка blocked-домена делает `return` раньше →
+  на запрещённом домене онбординг не запускается), `void initHints()` в конце
+  `buildPanelUI`.
+- **Файлы:** new `src/content/onboarding/{state,icons,tour-steps,onboarding.css,
+  styles,tour,welcome,hints,index}.ts`; правки `src/content/panel/panel.ts`. Тесты:
+  `tests/content/onboarding/{state,tour-steps,tour}.test.ts` (+14).
+- **Проверка:** `npm run ci` зелёный — `tsc --noEmit` (strict) чист; `vitest run` —
+  **224/224** (210 прежних + 14 новых: state 4 + tour-steps 5 + tour 5); `npm run build`
+  собирает `dist/firefox` и `dist/chrome` (269 модулей, +`onboarding`); `web-ext lint
+  dist/firefox` — **0 errors** (warnings — пред-существующие `eval`/`innerHTML` из
+  бандла, новых ошибок нет); CDN в `dist/` не добавлены. Ручная приёмка (авто-карусель
+  при первом открытии → тур по 8 кнопкам, «Назад»/сегменты/клавиатура, отсутствие
+  повторного авто-показа, подсказки 💡, обе темы и ширина, неактивность на запрещённом
+  домене) — за владельцем, как в Phase 1–5.
+
+## Доработки онбординга (по `docs/доработки обучения.md`, 11 замечаний)
+
+- **Затемнение по форме панели (зад. 1, 9)** — вместо «дыры через box-shadow» на весь
+  экран введён отдельный слой `.tne-onb-dim` (`position:absolute; inset:12px;
+  border-radius:22px; overflow:hidden`), повторяющий форму `.tne-chat-panel`; вырез
+  `.tne-onb-cutout` теперь его потомок, и спред box-shadow клипается по скруглённым
+  границам панели — затемнение не выходит наружу. Рамка выреза клампится по
+  внутренним границам панели (зад. 9, широкие шаги attach/tables/prompts).
+- **Карточка следует за элементом (зад. 4, 8)** — горизонталь карточки считается от
+  выреза: `left = clamp(rect.left, 16, panelW − tipW − 16)` (не прилипает к краю);
+  добавлен «носик» `.tne-onb-arrow` (вверх/вниз по placement), указывающий на элемент.
+- **Разбиение текста (зад. 5)** — `sanitizeBody` расширен `<br>` и переносами `\n→<br>`;
+  все `body` в `tour-steps.ts` переписаны короткими строками/маркерами; в карусели
+  (`welcome.ts`) переносы рендерятся через `white-space: pre-line`.
+- **Состав и порядок шагов (зад. 6, 7, 10)** — добавлены шаги `role` (собеседник) и
+  `theme` (тема), удалён `settings`; порядок: контекст → собеседник → тема → размер
+  текста → скачать → очистить → вложения → таблицы → команды/промпты (9 шагов).
+- **Контраст индикаторов (зад. 3)** — «Шаг N из M» оформлен чипом на подложке
+  (`--tne-text` на `--tne-onb-tint`); сегменты-прогресс на `--tne-border-strong`,
+  активный — акцент.
+- **Иконки (зад. 2, 6, 10)** — слайд 2 карусели: `spark`→`grid`; новые `role`, `theme`;
+  `spark` удалён.
+- **Удалены «внезапные» подсказки 💡 (зад. 11)** — удалён `onboarding/hints.ts`,
+  вызов/импорт `initHints` из `panel.ts`, ре-экспорт из `index.ts`, стили
+  `.tne-onb-hint*`; из `state.ts` убраны `isHintSeen/withHintSeen/markHintSeen`
+  (поле `hintsSeen` сохранено для совместимости storage). Роль и тема переехали в тур;
+  на кнопку «Обновить» добавлен `title`-тултип.
+- **Файлы:** правки `onboarding/{tour,tour-steps,welcome,onboarding.css,icons,state,
+  index}.ts`, `panel/panel.ts`; удалён `onboarding/hints.ts`. Тесты:
+  `tour-steps.test.ts` (порядок 9 шагов), `state.test.ts` (удалены hint-тесты).
+- **Проверка:** `tsc --noEmit` чист; `vitest run` — **222/222**; `npm run build`
+  собирает `dist/firefox` и `dist/chrome`. Ручная приёмка в Firefox
+  (`dist/firefox/manifest.json`): затемнение не выходит за панель, карточки под своими
+  кнопками и едут при ресайзе, отсутствие 💡-подсказок — за владельцем.
+
+## Доработки: ссылка на ТНЭ-чат, меню настроек, правки тура (`docs/доработки-ссылка-и-меню-настроек.md`)
+
+- **Ссылка на веб-ассистент (п. 1)** — в бренд-блоке шапки под подзаголовком добавлена
+  ненавязчивая ссылка `.tne-chat-link` «Открыть ТНЭ-чат →» на
+  `https://tne-chat.tne.tn.corp?utm_source=TneBrowsePlugin` (`target="_blank"`,
+  `rel="noopener"`, акцентный `--tne-primary`, подчёркивание по наведению). `href`
+  даёт нативное открытие (средняя кнопка), левый клик роутится через новый тип
+  сообщения `TNE_OPEN_URL` → `browser.tabs.create` (надёжнее из shadow root MV2).
+- **Меню настроек (п. 2)** — в шапке остались только триггер `#tne-chat-menu`
+  (шестерёнка) и `#tne-chat-close`. Остальное переехало в поповер
+  `#tne-settings-menu` (`role="menu"`): собеседник (`#tne-role-select`), размер текста
+  (`#tne-font-menu-wrap` со степпером −/+), тема (`#tne-theme-toggle`), скачать
+  (`#tne-chat-export`), очистить (`#tne-chat-clear`), обучение (`#tne-chat-help`),
+  настройки расширения (`#tne-chat-settings`). **Все id сохранены** — обработчики и
+  якоря тура не тронуты. Логика открытия/закрытия — отдельный модуль
+  `panel/settings-menu.ts` (без кругового импорта с туром): класс-состояние
+  `.tne-settings-menu--open` + `aria-expanded`; закрытие по клику вне, по `Esc`
+  (сначала меню, потом панель), по выбору пункта `[role="menuitem"]`.
+- **Тур и спрятанные якоря (п. 5)** — в `TourStep` добавлено поле `requiresMenu`;
+  им помечены `role/font/theme/export/clear`. `tour.ts`: для таких шагов перед
+  измерением рамки открывает меню и ставит замок (`setSettingsMenuLock`, чтобы
+  клик-вне/Esc его не схлопнули), ждёт кадр (`requestAnimationFrame`) и считает rect;
+  на шагах без меню — закрывает. `isVisible` для `requiresMenu`-шагов проверяет
+  наличие в DOM, а не `offsetParent`. `closeTour` гарантированно снимает замок и
+  закрывает меню; `Esc` в туре теперь `stopPropagation` — панель не закрывается вслед.
+- **Тексты и порядок шагов (п. 3, 4)** — в шаге `prompts` «Чипы» → «Готовые промпты»;
+  шаги переставлены: размер текста (`font`) идёт перед темой (`theme`). Новый порядок:
+  контекст → собеседник → размер текста → тема → скачать → очистить → вложения →
+  таблицы → команды/промпты.
+- **Файлы:** `panel/{panel.ts,panel.css,icons.ts,controls.ts}`, новый
+  `panel/settings-menu.ts`, `onboarding/{tour.ts,tour-steps.ts}`,
+  `shared/messages.ts`, `background/messaging.ts`. Тесты: `tour-steps.test.ts`
+  (новый порядок, `requiresMenu`, отсутствие «чип»).
+- **Проверка:** `tsc --noEmit` чист; `vitest run` — **224/224**; `npm run build:firefox`
+  собирает `dist/firefox`. Ручная приёмка в Firefox — за владельцем.

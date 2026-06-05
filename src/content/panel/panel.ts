@@ -33,8 +33,10 @@ import {
   ATTACH_ICON,
   EXPORT_ICON,
   TABLE_EXPORT_ICON,
+  ROLE_ICON,
 } from "./icons";
 import { initFontControls, initThemeControl, initResizeHandle, toggleTheme } from "./controls";
+import { initSettingsMenu, isSettingsMenuOpen, closeSettingsMenu } from "./settings-menu";
 import { renderWelcomeMessage, clearChat, sendQuestion, addAssistantMessage } from "./chat";
 import { exportDialog } from "../chat/export-md";
 import { initAttachments } from "../vision/attachments";
@@ -50,6 +52,11 @@ import {
   type SlashCommand,
 } from "../chat/slash-commands";
 import { initPromptPanel } from "./prompt-panel";
+import { HELP_ICON } from "../onboarding/icons";
+import { maybeStartOnboarding, startWelcome } from "../onboarding";
+
+/** Основной веб-ассистент (доработки п. 1). UTM-метку сохраняем как есть. */
+const TNE_CHAT_URL = "https://tne-chat.tne.tn.corp?utm_source=TneBrowsePlugin";
 
 async function computeAllowed(): Promise<boolean> {
   const settings = await readSettings();
@@ -81,6 +88,7 @@ export async function togglePanel(): Promise<void> {
     }
     const input = $("#tne-chat-input");
     setTimeout(() => input?.focus(), 80);
+    void maybeStartOnboarding();
   }
 }
 
@@ -274,23 +282,48 @@ function buildPanelUI(root: HTMLElement): void {
             <div class="tne-chat-heading">
               <div class="tne-chat-title">ТНЭ чат · Браузер</div>
               <div class="tne-chat-subtitle">Анализ текущей страницы</div>
+              <a class="tne-chat-link" id="tne-chat-link" href="${TNE_CHAT_URL}" target="_blank" rel="noopener" title="ТНЭ-чат — ИИ-ассистент">Открыть ТНЭ-чат →</a>
             </div>
           </div>
           <div class="tne-chat-header-actions">
-            <select class="tne-role-select" id="tne-role-select" title="Роль ассистента" aria-label="Роль ассистента"></select>
-            <div class="tne-font-menu-wrap" id="tne-font-menu-wrap">
-              <button class="tne-icon-button" id="tne-font-trigger" title="Размер текста" type="button" aria-label="Размер текста">${FONT_ICON}</button>
-              <div class="tne-font-menu" id="tne-font-menu" aria-label="Размер текста">
-                <button id="tne-font-minus" type="button" title="Уменьшить текст">−</button>
-                <span id="tne-font-size-label">12</span>
-                <button id="tne-font-plus" type="button" title="Увеличить текст">+</button>
-              </div>
-            </div>
-            <button class="tne-icon-button" id="tne-theme-toggle" title="Тема оформления" type="button" aria-label="Сменить тему">${THEME_ICON}</button>
-            <button class="tne-icon-button" id="tne-chat-export" title="Экспортировать диалог в .md" type="button" aria-label="Экспортировать диалог в Markdown">${EXPORT_ICON}</button>
-            <button class="tne-icon-button" id="tne-chat-clear" title="Очистить чат" type="button" aria-label="Очистить чат">${ERASER_ICON}</button>
-            <button class="tne-icon-button" id="tne-chat-settings" title="Настройки" type="button" aria-label="Настройки">${GEAR_ICON}</button>
+            <button class="tne-icon-button" id="tne-chat-menu" title="Меню" type="button" aria-label="Меню настроек" aria-haspopup="true" aria-expanded="false">${GEAR_ICON}</button>
             <button class="tne-icon-button" id="tne-chat-close" title="Закрыть (Esc)" type="button" aria-label="Закрыть">${CLOSE_ICON}</button>
+            <div class="tne-settings-menu" id="tne-settings-menu" role="menu" aria-label="Меню настроек">
+              <div class="tne-menu-item tne-menu-item--control" role="group" aria-label="Собеседник">
+                <span class="tne-menu-ic">${ROLE_ICON}</span>
+                <span class="tne-menu-label">Собеседник</span>
+                <select class="tne-role-select" id="tne-role-select" title="Роль ассистента" aria-label="Роль ассистента"></select>
+              </div>
+              <div class="tne-menu-item tne-menu-item--control" id="tne-font-menu-wrap" role="group" aria-label="Размер текста">
+                <span class="tne-menu-ic">${FONT_ICON}</span>
+                <span class="tne-menu-label">Размер текста</span>
+                <span class="tne-menu-stepper">
+                  <button id="tne-font-minus" type="button" title="Уменьшить текст">−</button>
+                  <span id="tne-font-size-label">12</span>
+                  <button id="tne-font-plus" type="button" title="Увеличить текст">+</button>
+                </span>
+              </div>
+              <button class="tne-menu-item" id="tne-theme-toggle" role="menuitem" type="button" title="Тема оформления">
+                <span class="tne-menu-ic">${THEME_ICON}</span>
+                <span class="tne-menu-label">Тема оформления</span>
+              </button>
+              <button class="tne-menu-item" id="tne-chat-export" role="menuitem" type="button" title="Экспортировать диалог в .md">
+                <span class="tne-menu-ic">${EXPORT_ICON}</span>
+                <span class="tne-menu-label">Скачать диалог</span>
+              </button>
+              <button class="tne-menu-item" id="tne-chat-clear" role="menuitem" type="button" title="Очистить чат">
+                <span class="tne-menu-ic">${ERASER_ICON}</span>
+                <span class="tne-menu-label">Очистить чат</span>
+              </button>
+              <button class="tne-menu-item" id="tne-chat-help" role="menuitem" type="button" title="Обучение / помощь">
+                <span class="tne-menu-ic">${HELP_ICON}</span>
+                <span class="tne-menu-label">Обучение</span>
+              </button>
+              <button class="tne-menu-item" id="tne-chat-settings" role="menuitem" type="button" title="Настройки расширения">
+                <span class="tne-menu-ic">${GEAR_ICON}</span>
+                <span class="tne-menu-label">Настройки расширения</span>
+              </button>
+            </div>
           </div>
         </header>
 
@@ -301,7 +334,7 @@ function buildPanelUI(root: HTMLElement): void {
               <div class="tne-context-title" id="tne-page-title">Подготовка контекста…</div>
               <div class="tne-context-meta" id="tne-context-meta">—</div>
             </div>
-            <button class="tne-small-button" id="tne-refresh-context" type="button">Обновить</button>
+            <button class="tne-small-button" id="tne-refresh-context" type="button" title="Пересобрать контекст, если страница изменилась">Обновить</button>
           </div>
           <div class="tne-scope-row" id="tne-scope-row"></div>
           <div class="tne-scope-hint" id="tne-scope-hint"></div>
@@ -361,12 +394,22 @@ function buildPanelUI(root: HTMLElement): void {
   initAttachments(root);
   initPdf();
   initOffice(root);
+  initSettingsMenu(root);
 
   root.querySelector("#tne-chat-close")?.addEventListener("click", () => togglePanel());
+  root.querySelector("#tne-chat-help")?.addEventListener("click", () => startWelcome());
   root.querySelector("#tne-theme-toggle")?.addEventListener("click", () => toggleTheme());
   root.querySelector("#tne-chat-settings")?.addEventListener("click", () => browser.runtime.sendMessage({ type: "TNE_OPEN_OPTIONS" }));
   root.querySelector("#tne-chat-export")?.addEventListener("click", () => exportDialog());
   root.querySelector("#tne-chat-clear")?.addEventListener("click", () => clearChat());
+
+  // Ссылка на основной веб-ассистент (п. 1). href даёт нативное открытие (в т.ч.
+  // средней кнопкой), а клик роутим через background — надёжнее из shadow root
+  // content-script в закрытой сети (TNE_OPEN_URL → browser.tabs.create).
+  root.querySelector("#tne-chat-link")?.addEventListener("click", (event) => {
+    event.preventDefault();
+    void browser.runtime.sendMessage({ type: "TNE_OPEN_URL", url: TNE_CHAT_URL });
+  });
   root.querySelector("#tne-refresh-context")?.addEventListener("click", () => refreshContext(true, "button"));
   root.querySelector("#tne-chat-send")?.addEventListener("click", () => sendQuestion());
 
@@ -411,13 +454,15 @@ function buildPanelUI(root: HTMLElement): void {
     }
   });
 
-  // Esc — закрыть панель (хоткей работает в пределах фокуса панели).
+  // Esc — сначала закрыть открытое меню настроек, потом панель (п. 2). Во время
+  // тура меню под замком: тур перехватывает Esc раньше (stopPropagation), сюда
+  // событие не доходит.
   STATE.shadow?.addEventListener("keydown", (event) => {
     const keyEvent = event as KeyboardEvent;
     if (keyEvent.key !== "Escape" || !STATE.opened) return;
-    const wrap = root.querySelector("#tne-font-menu-wrap");
-    if (wrap?.classList.contains("tne-font-menu-wrap--open")) {
-      wrap.classList.remove("tne-font-menu-wrap--open");
+    if (isSettingsMenuOpen()) {
+      keyEvent.preventDefault();
+      closeSettingsMenu();
       return;
     }
     keyEvent.preventDefault();
