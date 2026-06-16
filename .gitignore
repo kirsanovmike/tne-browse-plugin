@@ -24,3 +24,12 @@ build/
 .env.*
 *.local
 .superpowers/
+
+# Chromium extension signing key (НЕ коммитить — приватный ключ Extension ID)
+*.pem
+*.crx
+*.p12
+
+# Собранные пакеты расширения и вендоренный инструментарий агентов
+*.zip
+.agents/

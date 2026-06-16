@@ -86,6 +86,13 @@ export const ROLE_ICON = `
       <path d="M5 20a7 7 0 0 1 14 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
     </svg>`;
 
+// Стрелка-индикатор сворачивания карточки контекста (доработки п. 2). По умолчанию
+// смотрит вправо (свёрнуто); в раскрытом details поворачивается вниз через CSS.
+export const CARET_ICON = `
+    <svg class="tne-action-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <path d="M9 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>`;
+
 // Ссылка на основной веб-ассистент — стрелка «открыть во внешней вкладке».
 export const LINK_ICON = `
     <svg class="tne-action-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">

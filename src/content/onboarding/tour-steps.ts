@@ -75,7 +75,6 @@ export const TOUR_STEPS: readonly TourStep[] = [
     title: "Очистить чат",
     body: "Стирает текущую переписку и начинает с чистого листа.\nКонтекст соберётся заново.",
     placement: "bottom",
-    requiresMenu: true,
   },
   {
     id: "attach",

@@ -169,26 +169,41 @@
   height: 18px;
 }
 
-/* ─── Ссылка на основной веб-ассистент (доработки п. 1) ─── */
+/* ─── Ссылка на основной веб-ассистент (доработки п. 1, п. 3) ─── */
+/* Контрастная «пилюля» в фирменном цвете: CTA считывается сразу в обеих темах,
+   но компактна и не спорит с иконками-действиями. */
 .tne-chat-link {
-  display: inline-block;
-  margin-top: 3px;
+  display: inline-flex;
+  align-items: center;
+  margin-top: 5px;
   max-width: 100%;
+  padding: 2px 10px;
   overflow: hidden;
-  color: var(--tne-primary);
+  color: #fff;
+  background: var(--tne-primary);
+  border: 1px solid var(--tne-primary);
+  border-radius: 999px;
   font-size: 11px;
-  font-weight: 600;
-  line-height: 1.2;
+  font-weight: 700;
+  line-height: 1.4;
   text-decoration: none;
   text-overflow: ellipsis;
   white-space: nowrap;
-  opacity: 0.92;
-  transition: opacity 0.16s ease;
+  transition: background 0.16s ease, box-shadow 0.16s ease, transform 0.16s ease;
 }
 
 .tne-chat-link:hover {
-  opacity: 1;
-  text-decoration: underline;
+  background: var(--tne-primary-lighten);
+  box-shadow: 0 6px 16px rgba(154, 36, 79, 0.34);
+}
+
+.tne-chat-link:active {
+  transform: translateY(1px);
+}
+
+.tne-chat-link:focus-visible {
+  outline: 2px solid var(--tne-primary);
+  outline-offset: 2px;
 }
 
 /* ─── Выпадающее меню настроек (доработки п. 2) ─── */
@@ -327,11 +342,55 @@
   box-shadow: none;
 }
 
+/* Доработки п. 2: выбор режима (scope) всегда виден сверху, ниже — информация о
+   собранном контексте в раскрывающемся блоке (по умолчанию свёрнут). */
+.tne-context-collapse {
+  margin-top: 9px;
+  padding-top: 9px;
+  border-top: 1px solid var(--tne-border);
+}
+
 .tne-context-top {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 10px;
+  cursor: pointer;
+  list-style: none;
+  outline: none;
+}
+
+.tne-context-top::-webkit-details-marker {
+  display: none;
+}
+
+.tne-context-top:focus-visible {
+  outline: 2px solid var(--tne-border-strong);
+  outline-offset: 3px;
+  border-radius: 8px;
+}
+
+.tne-context-caret {
+  flex: 0 0 auto;
+  display: inline-grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  margin-top: 1px;
+  color: var(--tne-muted-soft);
+  transition: transform 0.18s ease, color 0.16s ease;
+}
+
+.tne-context-top:hover .tne-context-caret {
+  color: var(--tne-text);
+}
+
+.tne-context-collapse[open] .tne-context-caret {
+  transform: rotate(90deg);
+}
+
+.tne-context-body {
+  margin-top: 2px;
 }
 
 .tne-context-main {
@@ -386,6 +445,10 @@
 
 .tne-context-details {
   flex: 0 0 auto;
+  /* min-width:0 — иначе flex-элемент не сжимается уже своего контента и <pre>
+     выезжает за панель на узкой ширине. */
+  min-width: 0;
+  max-width: 100%;
   color: var(--tne-on-surface);
   font-size: 12px;
 }
@@ -397,6 +460,7 @@
 .tne-context-details summary {
   display: inline-flex;
   align-items: center;
+  max-width: 100%;
   padding: 4px 10px;
   cursor: pointer;
   color: var(--tne-on-surface);
@@ -405,6 +469,7 @@
   border-radius: 9px;
   font-size: 11px;
   line-height: 1.2;
+  white-space: normal;
   outline: none;
   transition: border-color 0.16s ease, background 0.16s ease, color 0.16s ease;
 }
@@ -424,7 +489,11 @@
   border: 1px solid rgba(106, 127, 154, 0.20);
   border-radius: 12px;
   font: var(--tne-content-font-size)/1.45 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  /* Переносим длинные строки/токены (URL, JSON без пробелов), чтобы текст не
+     выезжал за панель на узкой ширине. */
   white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
   scrollbar-width: thin;
   scrollbar-color: rgba(106, 127, 154, 0.42) transparent;
 }
@@ -737,11 +806,11 @@
 }
 
 /* ─── Переключатели объёма контекста (scope) ─── */
+/* Доработки п. 2: scope-ряд теперь первым элементом карточки (всегда виден). */
 .tne-scope-row {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  margin-top: 9px;
 }
 
 /* 5.R3-4: короткая подпись-подсказка под режимами — чтобы назначение каждого

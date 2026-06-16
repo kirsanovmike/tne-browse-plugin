@@ -105,10 +105,13 @@ export function startDomWatcher(): void {
 
   STATE.domWatchStarted = true;
 
-  // Observer лишь помечает контекст «грязным» — НЕ парсит на каждую мутацию.
+  // Доработки п. 4: кнопку «Обновить» убрали — контекст пересобирается сам.
+  // Наблюдатель/ввод не парсят на каждую мутацию, а планируют дебаунс-пересбор;
+  // тяжёлый разбор троттлится (reason "dom-change" → не чаще раза в 1400 мс) и не
+  // запускается во время отправки. Так мета честно держится «свежей».
   const markDirty = (): void => {
     if (!STATE.opened || STATE.isSending) return;
-    markContextDirty();
+    scheduleContextRefresh("dom-change", 900);
   };
 
   const isMeaningfulMutation = (mutation: MutationRecord): boolean => {

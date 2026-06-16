@@ -34,6 +34,7 @@ import {
   EXPORT_ICON,
   TABLE_EXPORT_ICON,
   ROLE_ICON,
+  CARET_ICON,
 } from "./icons";
 import { initFontControls, initThemeControl, initResizeHandle, toggleTheme } from "./controls";
 import { initSettingsMenu, isSettingsMenuOpen, closeSettingsMenu } from "./settings-menu";
@@ -286,6 +287,7 @@ function buildPanelUI(root: HTMLElement): void {
             </div>
           </div>
           <div class="tne-chat-header-actions">
+            <button class="tne-icon-button" id="tne-chat-clear" title="Очистить чат" type="button" aria-label="Очистить чат">${ERASER_ICON}</button>
             <button class="tne-icon-button" id="tne-chat-menu" title="Меню" type="button" aria-label="Меню настроек" aria-haspopup="true" aria-expanded="false">${GEAR_ICON}</button>
             <button class="tne-icon-button" id="tne-chat-close" title="Закрыть (Esc)" type="button" aria-label="Закрыть">${CLOSE_ICON}</button>
             <div class="tne-settings-menu" id="tne-settings-menu" role="menu" aria-label="Меню настроек">
@@ -311,10 +313,6 @@ function buildPanelUI(root: HTMLElement): void {
                 <span class="tne-menu-ic">${EXPORT_ICON}</span>
                 <span class="tne-menu-label">Скачать диалог</span>
               </button>
-              <button class="tne-menu-item" id="tne-chat-clear" role="menuitem" type="button" title="Очистить чат">
-                <span class="tne-menu-ic">${ERASER_ICON}</span>
-                <span class="tne-menu-label">Очистить чат</span>
-              </button>
               <button class="tne-menu-item" id="tne-chat-help" role="menuitem" type="button" title="Обучение / помощь">
                 <span class="tne-menu-ic">${HELP_ICON}</span>
                 <span class="tne-menu-label">Обучение</span>
@@ -328,26 +326,30 @@ function buildPanelUI(root: HTMLElement): void {
         </header>
 
         <section class="tne-context-card" aria-label="Контекст страницы">
-          <div class="tne-context-top">
-            <div class="tne-context-main">
-              <div class="tne-context-label">Контекст страницы</div>
-              <div class="tne-context-title" id="tne-page-title">Подготовка контекста…</div>
-              <div class="tne-context-meta" id="tne-context-meta">—</div>
-            </div>
-            <button class="tne-small-button" id="tne-refresh-context" type="button" title="Пересобрать контекст, если страница изменилась">Обновить</button>
-          </div>
           <div class="tne-scope-row" id="tne-scope-row"></div>
           <div class="tne-scope-hint" id="tne-scope-hint"></div>
-          <div class="tne-context-previews">
-            <details class="tne-context-details">
-              <summary>Показать извлечённый текст</summary>
-              <pre id="tne-context-preview"></pre>
-            </details>
-            <details class="tne-context-details" id="tne-payload-details">
-              <summary>Показать, что уйдёт в модель (без токена)</summary>
-              <pre id="tne-payload-preview">Откройте этот блок, чтобы собрать тело запроса…</pre>
-            </details>
-          </div>
+          <details class="tne-context-collapse">
+            <summary class="tne-context-top">
+              <div class="tne-context-main">
+                <div class="tne-context-label">Контекст страницы</div>
+                <div class="tne-context-title" id="tne-page-title">Подготовка контекста…</div>
+                <div class="tne-context-meta" id="tne-context-meta">—</div>
+              </div>
+              <span class="tne-context-caret" aria-hidden="true">${CARET_ICON}</span>
+            </summary>
+            <div class="tne-context-body">
+              <div class="tne-context-previews">
+                <details class="tne-context-details">
+                  <summary>Показать извлечённый текст</summary>
+                  <pre id="tne-context-preview"></pre>
+                </details>
+                <details class="tne-context-details" id="tne-payload-details">
+                  <summary>Показать, что уйдёт в модель (без токена)</summary>
+                  <pre id="tne-payload-preview">Откройте этот блок, чтобы собрать тело запроса…</pre>
+                </details>
+              </div>
+            </div>
+          </details>
         </section>
 
         <div class="tne-warning-bar" id="tne-warning-bar" hidden>
@@ -410,7 +412,6 @@ function buildPanelUI(root: HTMLElement): void {
     event.preventDefault();
     void browser.runtime.sendMessage({ type: "TNE_OPEN_URL", url: TNE_CHAT_URL });
   });
-  root.querySelector("#tne-refresh-context")?.addEventListener("click", () => refreshContext(true, "button"));
   root.querySelector("#tne-chat-send")?.addEventListener("click", () => sendQuestion());
 
   const payloadDetails = root.querySelector("#tne-payload-details") as HTMLDetailsElement | null;
@@ -553,4 +554,20 @@ function setScope(scopeId: ScopeId): void {
   // Замечание 6: подсказка под кнопками отражает активный режим.
   const hint = $("#tne-scope-hint");
   if (hint) hint.textContent = SCOPES.find((s) => s.id === scopeId)?.hint || "";
+
+  // «Без контекста» (scope "none"): страницу не собираем — скрываем раскрывающийся
+  // блок «Контекст страницы», оставляем только подпись-подсказку. «Вся страница» —
+  // показываем блок.
+  const collapse = $(".tne-context-collapse") as HTMLDetailsElement | null;
+  if (collapse) {
+    const hide = scopeId === "none";
+    collapse.hidden = hide;
+    if (hide) collapse.open = false;
+  }
+
+  // Пока чат пустой — приветствие должно отражать выбранный режим (без контекста
+  // не обещаем разбор страницы). После начала диалога ленту не трогаем.
+  if (STATE.history.length === 0 && $(".tne-assistant-card--welcome")) {
+    renderWelcomeMessage();
+  }
 }

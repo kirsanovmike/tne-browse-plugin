@@ -50,6 +50,17 @@ export function getManifest({ browser }: BuildEnv): Record<string, unknown> {
           },
         }
       : {};
+  // Chromium: поле `key` фиксирует публичный ключ → стабильный Extension ID
+  // (одинаковый во всех Chromium-браузерах: Chrome, Edge, Yandex, и т.п.).
+  // ID = koegklnhfjpkeacibnenkmhebiaijljg — его отдаём сисадминам для allowlist.
+  // Приватный ключ (tne-chromium.pem) хранится вне репозитория (.gitignore).
+  // Firefox это поле игнорирует, поэтому кладём только в Chromium-манифест.
+  const chromiumKey =
+    browser === "chrome"
+      ? {
+          key: "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAubrxezRqVCSKcxUHNFAVtX/X1ntiRmq83f64XfzVZrxDw+ZPHQYHZ+MUVQyaIkurMp9h2KBl3WOKxqll3EteHcu77DoURkiopfz6Ants8qtrWh6eqpQW70JJLy3OlvdhFNMqPBMOJWapHgHn6F0CU/+jr325gn4Sy4CZiXEYgo202LASeUKkSPLxgCcTOWUrs5Xsuak5pXwyKGkYPe4wENcAOEFr62vXJu63OeJywrcxeoru4lBV37xPE+uhgBAonzT+xVdVgDtKTlqYw/rEavajTUNcbTvlOGIJ8IY+Lnh54uh+LaVGSdia8dmROrA/YrFqdRWv+zcVCITzBtzIEQIDAQAB",
+        }
+      : {};
   return {
     manifest_version: 3,
     name: "ТНЭ чат · Браузер",
@@ -93,6 +104,7 @@ export function getManifest({ browser }: BuildEnv): Record<string, unknown> {
     permissions: ["activeTab", "storage", "scripting", "tabs", "contextMenus", "downloads"],
     host_permissions: ["<all_urls>"],
     ...geckoSettings,
+    ...chromiumKey,
     // M3: panel.css и тема highlight.js инлайнятся в shadow root → не WAR.
     // M4: MV3-формат WAR — массив объектов { resources, matches }.
     web_accessible_resources: [

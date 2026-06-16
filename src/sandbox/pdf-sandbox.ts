@@ -60,7 +60,11 @@ async function renderPage(d: PDFDocumentProxy, n: number, scale: number): Promis
   canvas.height = Math.max(1, Math.floor(viewport.height));
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("Canvas недоступен для рендера PDF.");
-  await page.render({ canvasContext: ctx, viewport }).promise;
+  // intent: "print" отключает useRequestAnimationFrame в PDF.js → продолжение
+  // чанков планируется через микротаски, а не rAF. Chromium агрессивно троттлит
+  // rAF в скрытом iframe нулевого размера, из-за чего render().promise зависал и
+  // срабатывал таймаут «не ответил при отрисовке». Микротаски не троттлятся.
+  await page.render({ canvasContext: ctx, viewport, intent: "print" }).promise;
   return canvas.toDataURL("image/jpeg", 0.85);
 }
 

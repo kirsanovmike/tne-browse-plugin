@@ -11,7 +11,8 @@ describe("TOUR_STEPS", () => {
 
   it("шаги с якорями в меню настроек помечены requiresMenu", () => {
     const inMenu = TOUR_STEPS.filter((s) => s.requiresMenu).map((s) => s.id);
-    expect(inMenu).toEqual(["role", "font", "theme", "export", "clear"]);
+    // Доработки п. 1: «Очистить чат» вынесена в шапку — больше не требует меню.
+    expect(inMenu).toEqual(["role", "font", "theme", "export"]);
   });
 
   it("в текстах шагов нет слова «чип»", () => {

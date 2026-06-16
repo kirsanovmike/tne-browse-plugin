@@ -1061,3 +1061,26 @@ TDD на чистых модулях). Ветка `phase8-onboarding`. Новы�
   (новый порядок, `requiresMenu`, отсутствие «чип»).
 - **Проверка:** `tsc --noEmit` чист; `vitest run` — **224/224**; `npm run build:firefox`
   собирает `dist/firefox`. Ручная приёмка в Firefox — за владельцем.
+
+## Исправление рендера PDF в Chrome/Яндекс.Браузере (`docs/исправление работы pdfjs.md`)
+
+- **Симптом** — в Chromium-браузерах (общий `dist/chrome`) прикрепление страниц PDF
+  картинками падало с «PDF.js не ответил при отрисовке страницы N» (таймаут
+  `PAGE_RENDER_TIMEOUT_MS = 20000`). В Firefox то же работало. Извлечение текста — ок
+  в обоих, падал только `page.render(...).promise`.
+- **Причина** — PDF.js при `intent: "display"` планирует продолжение чанков
+  operator-list через `requestAnimationFrame`. Sandbox-iframe скрыт и нулевого размера
+  (`width:0;height:0;visibility:hidden`), а Chromium агрессивно троттлит/замораживает
+  rAF в невидимых фреймах → цепочка `_scheduleNext` обрывается, промис не резолвится.
+  Не Xray и не CSP — разница троттлинга rAF между движками.
+- **Фикс (Вариант A)** — `renderPage()` в `src/sandbox/pdf-sandbox.ts`: добавлен
+  `intent: "print"` в `page.render(...)`. Тогда `useRequestAnimationFrame = false`,
+  продолжение чанков идёт через микротаски (`Promise.resolve().then`), которые в
+  Chromium не троттлятся в скрытых фреймах. Sandbox остаётся честно скрытым.
+- **Файлы:** `src/sandbox/pdf-sandbox.ts` (одна правка + комментарий).
+- **Проверка:** `tsc --noEmit` чист; `vitest run` — **224/224**; `npm run build`
+  собрал `dist/firefox` и `dist/chrome`, `intent:"print"` присутствует в обоих
+  `*/src/sandbox/pdf-sandbox.js`. Ручная приёмка (Chrome, Яндекс.Браузер: открытие
+  PDF, текст, **отрисовка в картинки без таймаута**, режимы «Первые 5»/«Выбрать»/
+  диапазон; регресс Firefox; сверка 2–3 документов с формами/печатями на «печатном»
+  intent) — за владельцем.

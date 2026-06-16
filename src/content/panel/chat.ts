@@ -27,9 +27,16 @@ export function renderWelcomeMessage(): void {
   messages.innerHTML = "";
   const node = document.createElement("div");
   node.className = "tne-assistant-card tne-assistant-card--welcome";
+  // Приветствие отражает режим контекста: при «Без контекста» страницу не берём,
+  // поэтому не обещаем её разбор.
+  const noContext = STATE.scope === "none";
+  const meta = noContext ? "ТНЭ чат" : "ТНЭ чат · контекст страницы";
+  const text = noContext
+    ? "Контекст страницы не используется. Задайте вопрос — отвечу напрямую."
+    : "Я взял контекст текущей страницы. Спросите, что здесь важно, где что находится или что нужно сделать дальше.";
   node.innerHTML = `
-      <div class="tne-message-meta">ТНЭ чат · контекст страницы</div>
-      <div class="tne-message-content">Я взял контекст текущей страницы. Спросите, что здесь важно, где что находится или что нужно сделать дальше.</div>
+      <div class="tne-message-meta">${meta}</div>
+      <div class="tne-message-content">${text}</div>
     `;
   messages.appendChild(node);
   scrollMessages();
